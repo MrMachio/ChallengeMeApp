@@ -1,20 +1,24 @@
 'use client'
 
 import { useState } from 'react'
+import { Container, Box } from '@mui/material'
 import ChallengeCard from '@/components/ChallengeCard'
 import Filters from '@/components/Filters'
-import { mockChallenges, mockCategories } from '@/lib/mock/data'
+import { mockChallenges } from '@/lib/mock/data'
 
 export default function Home() {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('newest')
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
 
   // Фильтрация челленджей
   const filteredChallenges = mockChallenges.filter(challenge => {
-    if (selectedCategory && challenge.category !== selectedCategory) return false
-    if (selectedDifficulty && challenge.difficulty !== selectedDifficulty) return false
+    // Фильтр по категории
+    if (selectedCategory !== 'all' && challenge.category !== selectedCategory) {
+      return false
+    }
+    
+    // Фильтр по поисковому запросу
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       return (
@@ -41,55 +45,78 @@ export default function Home() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero секция */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Бросьте себе вызов!
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Присоединяйтесь к сообществу, создавайте и выполняйте интересные челленджи, 
-            развивайтесь и получайте награды.
-          </p>
-        </div>
+    <Container 
+      maxWidth="lg" 
+      sx={{ 
+        py: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 3
+      }}
+    >
+      <Box 
+        sx={{
+          width: '100%',
+          maxWidth: '1200px',
+          margin: '0 !important'
+        }}
+      >
+        <Filters
+          onSearch={setSearchQuery}
+          onCategoryChange={setSelectedCategory}
+          onSortChange={setSortBy}
+        />
+      </Box>
 
-        {/* Фильтры и поиск */}
-        <div className="mb-8">
-          <Filters
-            categories={mockCategories}
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            selectedDifficulty={selectedDifficulty}
-            onSelectDifficulty={setSelectedDifficulty}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            onSearch={setSearchQuery}
-          />
-        </div>
+      <Box 
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: 'repeat(2, 1fr)',
+            md: 'repeat(3, 1fr)'
+          },
+          gap: 3,
+          width: '100%',
+          maxWidth: '1200px',
+          mx: 'auto',
+          mt: 0
+        }}
+      >
+        {sortedChallenges.map(challenge => (
+          <ChallengeCard key={challenge.id} challenge={challenge} />
+        ))}
+      </Box>
 
-        {/* Список челленджей */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sortedChallenges.map(challenge => (
-            <ChallengeCard
-              key={challenge.id}
-              challenge={challenge}
-            />
-          ))}
-        </div>
-
-        {/* Сообщение, если нет челленджей */}
-        {sortedChallenges.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
-              Челленджи не найдены
-            </h3>
-            <p className="text-gray-600">
-              Попробуйте изменить параметры фильтрации или создайте свой челлендж!
-            </p>
-          </div>
-        )}
-      </main>
-    </div>
+      {/* Сообщение, если нет челленджей */}
+      {sortedChallenges.length === 0 && (
+        <Box 
+          sx={{ 
+            textAlign: 'center',
+            py: 6
+          }}
+        >
+          <Box 
+            component="h3" 
+            sx={{ 
+              fontSize: '1.25rem',
+              fontWeight: 500,
+              color: 'text.primary',
+              mb: 1
+            }}
+          >
+            Челленджи не найдены
+          </Box>
+          <Box 
+            component="p" 
+            sx={{ 
+              color: 'text.secondary'
+            }}
+          >
+            Попробуйте изменить параметры фильтрации или создайте свой челлендж!
+          </Box>
+        </Box>
+      )}
+    </Container>
   )
 }

@@ -1,126 +1,149 @@
 'use client'
 
-import { useState } from 'react'
-import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from 'react'
+import {
+  Box,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Stack
+} from '@mui/material'
+import SearchIcon from '@mui/icons-material/Search'
+import InputAdornment from '@mui/material/InputAdornment'
 
 interface FiltersProps {
-  selectedCategory: string | null
-  onSelectCategory: (category: string | null) => void
-  selectedDifficulty: string | null
-  onSelectDifficulty: (difficulty: string | null) => void
-  sortBy: 'newest' | 'popular' | 'points'
-  onSortChange: (sort: 'newest' | 'popular' | 'points') => void
+  onCategoryChange?: (category: string) => void
+  onSortChange?: (sort: 'newest' | 'popular' | 'points') => void
   onSearch?: (query: string) => void
-  categories: Array<{
-    id: string
-    name: string
-    icon: string
-  }>
 }
 
 export default function Filters({
-  selectedCategory,
-  onSelectCategory,
-  selectedDifficulty,
-  onSelectDifficulty,
-  sortBy,
+  onCategoryChange,
   onSortChange,
-  onSearch = () => {},
-  categories,
+  onSearch
 }: FiltersProps) {
   const [searchQuery, setSearchQuery] = useState('')
-  const difficulties = ['Легкий', 'Средний', 'Сложный']
-  const sortOptions = [
-    { value: 'newest', label: 'Сначала новые' },
-    { value: 'popular', label: 'Популярные' },
-    { value: 'points', label: 'По очкам' },
-  ]
+  const [category, setCategory] = useState('all')
+  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+  // Используем useEffect для начальной установки значений
+  useEffect(() => {
+    onCategoryChange?.(category)
+    onSortChange?.(sortBy)
+  }, [])
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value
     setSearchQuery(value)
-    onSearch(value)
+    onSearch?.(value)
+  }
+
+  const handleCategoryChange = (event: any) => {
+    const value = event.target.value
+    setCategory(value)
+    onCategoryChange?.(value)
+  }
+
+  const handleSortChange = (event: any) => {
+    const value = event.target.value as 'newest' | 'popular' | 'points'
+    setSortBy(value)
+    onSortChange?.(value)
   }
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 items-center justify-between w-full">
-      {/* Поисковая строка */}
-      <div className="relative flex-grow max-w-2xl">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={handleSearch}
-          placeholder="Search challenges..."
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-        />
-      </div>
+    <Stack 
+      direction={{ xs: 'column', sm: 'row' }} 
+      spacing={2} 
+      sx={{ 
+        width: '100%',
+        alignItems: { xs: 'stretch', sm: 'center' },
+        justifyContent: 'space-between'
+      }}
+    >
+      <TextField
+        placeholder="Поиск заданий..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: 'text.secondary' }} />
+            </InputAdornment>
+          )
+        }}
+        sx={{ 
+          flex: { xs: '1 1 100%', sm: '1 1 50%' },
+          minWidth: { xs: '100%', sm: '300px' },
+          maxWidth: { sm: '600px' },
+          '& .MuiOutlinedInput-root': {
+            borderRadius: '100px',
+            backgroundColor: 'background.paper',
+            '& fieldset': {
+              borderColor: 'divider'
+            },
+            '&:hover fieldset': {
+              borderColor: 'primary.main'
+            }
+          }
+        }}
+      />
 
-      <div className="flex items-center gap-4">
-        {/* Выпадающий список категорий */}
-        <div className="relative">
-          <select
-            value={selectedCategory || ''}
-            onChange={(e) => onSelectCategory(e.target.value === '' ? null : e.target.value)}
-            className="block w-40 rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
+      <Stack 
+        direction={{ xs: 'column', sm: 'row' }} 
+        spacing={2}
+        sx={{
+          flex: { xs: '1 1 100%', sm: '0 1 auto' },
+          minWidth: { xs: '100%', sm: 'auto' }
+        }}
+      >
+        <FormControl 
+          sx={{ 
+            minWidth: { xs: '100%', sm: 200 }
+          }}
+        >
+          <InputLabel>Категория</InputLabel>
+          <Select
+            value={category}
+            label="Категория"
+            onChange={handleCategoryChange}
+            sx={{
+              borderRadius: '100px',
+              backgroundColor: 'background.paper'
+            }}
           >
-            <option value="">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
+            <MenuItem value="all">Все</MenuItem>
+            <MenuItem value="Educational">Образование</MenuItem>
+            <MenuItem value="Environmental">Экология</MenuItem>
+            <MenuItem value="Sports">Спорт</MenuItem>
+            <MenuItem value="Creative">Творчество</MenuItem>
+            <MenuItem value="Social">Социальное</MenuItem>
+            <MenuItem value="Other">Другое</MenuItem>
+          </Select>
+        </FormControl>
 
-        {/* Выпадающий список сложности */}
-        <div className="relative">
-          <select
-            value={selectedDifficulty || ''}
-            onChange={(e) => onSelectDifficulty(e.target.value === '' ? null : e.target.value)}
-            className="block w-40 rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
-          >
-            <option value="">All Difficulties</option>
-            {difficulties.map((difficulty) => (
-              <option key={difficulty} value={difficulty}>
-                {difficulty}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Выпадающий список сортировки */}
-        <div className="relative">
-          <select
+        <FormControl 
+          sx={{ 
+            minWidth: { xs: '100%', sm: 200 }
+          }}
+        >
+          <InputLabel>Сортировка</InputLabel>
+          <Select
             value={sortBy}
-            onChange={(e) => onSortChange(e.target.value as 'newest' | 'popular' | 'points')}
-            className="block w-40 rounded-lg border border-gray-300 bg-white py-2 pl-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent appearance-none"
+            label="Сортировка"
+            onChange={handleSortChange}
+            sx={{
+              borderRadius: '100px',
+              backgroundColor: 'background.paper'
+            }}
           >
-            {sortOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
-            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
+            <MenuItem value="popular">Популярные</MenuItem>
+            <MenuItem value="newest">Новые</MenuItem>
+            <MenuItem value="points">По очкам</MenuItem>
+          </Select>
+        </FormControl>
+      </Stack>
+    </Stack>
   )
 } 

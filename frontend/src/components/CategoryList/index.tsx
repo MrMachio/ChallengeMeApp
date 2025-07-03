@@ -1,9 +1,7 @@
 'use client'
 
 import { mockCategories } from '@/lib/mock/data'
-import * as Select from '@radix-ui/react-select'
-import { ChevronDownIcon, CheckIcon } from '@heroicons/react/24/outline'
-import './styles.css'
+import { Box, Button, Stack } from '@mui/material'
 
 interface CategoryListProps {
   categories: {
@@ -21,21 +19,30 @@ export default function CategoryList({
   onSelectCategory,
 }: CategoryListProps) {
   return (
-    <div className="flex flex-wrap gap-4">
+    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
       {categories.map((category) => (
-        <button
+        <Button
           key={category.id}
           onClick={() => onSelectCategory(selectedCategory === category.name ? null : category.name)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            selectedCategory === category.name
-              ? 'bg-indigo-600 text-white'
-              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-          }`}
+          variant={selectedCategory === category.name ? "contained" : "outlined"}
+          sx={{
+            textTransform: 'none',
+            gap: 1,
+            bgcolor: selectedCategory === category.name ? 'primary.main' : 'background.paper',
+            color: selectedCategory === category.name ? 'common.white' : 'text.primary',
+            borderColor: selectedCategory === category.name ? 'primary.main' : 'grey.200',
+            '&:hover': {
+              bgcolor: selectedCategory === category.name ? 'primary.dark' : 'grey.50',
+              borderColor: selectedCategory === category.name ? 'primary.dark' : 'grey.300',
+            }
+          }}
         >
-          <span className="text-lg">{category.icon}</span>
+          <Box component="span" sx={{ fontSize: '1.125rem' }}>
+            {category.icon}
+          </Box>
           {category.name}
-        </button>
+        </Button>
       ))}
-    </div>
+    </Stack>
   )
 } 

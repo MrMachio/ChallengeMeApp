@@ -1,12 +1,25 @@
 'use client'
 
 import Image from 'next/image'
-import { HeartIcon, UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline'
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid'
 import Link from 'next/link'
 import { useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import './styles.css'
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  IconButton,
+  Chip,
+  Stack,
+  Avatar,
+  Button,
+  Divider,
+} from '@mui/material'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import GroupIcon from '@mui/icons-material/Group'
+import AccessTimeIcon from '@mui/icons-material/AccessTime'
 
 interface ChallengeCardProps {
   challenge: {
@@ -37,96 +50,267 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     setLikesCount(current => isLiked ? current - 1 : current + 1)
   }
 
+  const getDifficultyColor = (difficulty: string) => {
+    switch(difficulty.toLowerCase()) {
+      case 'легкий':
+        return { bg: '#E8F5E9', color: '#2E7D32' }
+      case 'средний':
+        return { bg: '#FFF3E0', color: '#E65100' }
+      case 'сложный':
+        return { bg: '#FFEBEE', color: '#C62828' }
+      default:
+        return { bg: '#E8F5E9', color: '#2E7D32' }
+    }
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-      <div className="relative aspect-video">
+    <Card 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        bgcolor: 'background.paper',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)'
+        }
+      }}
+    >
+      <Box 
+        sx={{ 
+          position: 'relative',
+          height: '180px',
+          width: '100%',
+          bgcolor: 'grey.100',
+          background: !challenge.imageUrl ? 'linear-gradient(45deg, #f3f4f6 0%, #e5e7eb 100%)' : undefined
+        }}
+      >
         {challenge.imageUrl ? (
           <Image
             src={challenge.imageUrl}
             alt={challenge.title}
             fill
-            className="object-cover"
+            style={{ 
+              objectFit: 'cover'
+            }}
           />
         ) : (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-            <span className="text-gray-400">Нет изображения</span>
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
-          <div className="flex flex-wrap gap-2">
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white">
-              {challenge.category}
-            </span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white">
-              {challenge.difficulty}
-            </span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white">
-              {challenge.points} очков
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4">
-        <Link href={`/challenge/${challenge.id}`}>
-          <h3 className="text-lg font-semibold text-gray-900 hover:text-indigo-600 transition-colors">
-            {challenge.title}
-          </h3>
-        </Link>
-        
-        <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-          {challenge.description}
-        </p>
-
-        <div className="mt-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleLike}
-              className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
-            >
-              {isLiked ? (
-                <HeartIconSolid className="w-5 h-5 text-red-500" />
-              ) : (
-                <HeartIcon className="w-5 h-5" />
-              )}
-              <span>{likesCount}</span>
-            </button>
-            
-            <div className="flex items-center gap-1 text-sm text-gray-500">
-              <UserGroupIcon className="w-5 h-5" />
-              <span>{challenge.completionsCount}</span>
-            </div>
-            
-            {challenge.timeLimit && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <ClockIcon className="w-5 h-5" />
-                <span>{challenge.timeLimit}ч</span>
-              </div>
-            )}
-          </div>
-
-          <Link
-            href={`/profile/${challenge.creator.username}`}
-            className="flex items-center gap-2 hover:opacity-75 transition-opacity"
+          <Box
+            sx={{
+              height: '100%',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            <div className="relative w-6 h-6 rounded-full overflow-hidden">
-              <Image
-                src={challenge.creator.avatarUrl}
-                alt={challenge.creator.username}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <span className="text-sm text-gray-600">
-              {challenge.creator.username}
-            </span>
-          </Link>
-        </div>
+            <Typography color="text.secondary">Нет изображения</Typography>
+          </Box>
+        )}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '12px',
+            left: '12px',
+            right: '12px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            zIndex: 2
+          }}
+        >
+          <Stack direction="row" spacing={0.75}>
+            <Chip
+              label={challenge.category}
+              size="small"
+              sx={{
+                bgcolor: 'white',
+                color: '#4B5563',
+                fontSize: '13px',
+                fontWeight: 500,
+                height: '26px',
+                borderRadius: '100px',
+                px: '10px'
+              }}
+            />
+            <Chip
+              label={challenge.difficulty}
+              size="small"
+              sx={{
+                bgcolor: getDifficultyColor(challenge.difficulty).bg,
+                color: getDifficultyColor(challenge.difficulty).color,
+                fontSize: '13px',
+                fontWeight: 500,
+                height: '26px',
+                borderRadius: '100px',
+                px: '10px'
+              }}
+            />
+          </Stack>
+          <Chip
+            label={`${challenge.points} points`}
+            size="small"
+            sx={{
+              bgcolor: '#F59E0B',
+              color: 'white',
+              fontSize: '13px',
+              fontWeight: 500,
+              height: '26px',
+              borderRadius: '100px',
+              px: '12px'
+            }}
+          />
+        </Box>
+      </Box>
 
-        <div className="mt-4 text-xs text-gray-500">
+      <CardContent 
+        sx={{ 
+          p: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          flexGrow: 1
+        }}
+      >
+        <Link href={`/challenge/${challenge.id}`} style={{ textDecoration: 'none' }}>
+          <Typography
+            sx={{
+              fontSize: '18px',
+              fontWeight: 600,
+              color: '#111827',
+              mb: '8px',
+              lineHeight: 1.3,
+              '&:hover': { 
+                color: 'primary.main'
+              }
+            }}
+          >
+            {challenge.title}
+          </Typography>
+        </Link>
+
+        <Typography
+          sx={{
+            color: '#6B7280',
+            fontSize: '14px',
+            lineHeight: 1.5,
+            mb: '16px',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}
+        >
+          {challenge.description}
+        </Typography>
+
+        <Box 
+          sx={{ 
+            mt: 'auto',
+            pt: '12px',
+            borderTop: '1px solid #E5E7EB',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Stack direction="row" spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <IconButton
+                onClick={handleLike}
+                size="small"
+                sx={{ 
+                  p: 0,
+                  color: '#9CA3AF',
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                    color: 'primary.main'
+                  }
+                }}
+              >
+                {isLiked ? (
+                  <FavoriteIcon sx={{ width: 18, height: 18 }} color="error" />
+                ) : (
+                  <FavoriteBorderIcon sx={{ width: 18, height: 18 }} />
+                )}
+              </IconButton>
+              <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                {likesCount}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <GroupIcon sx={{ width: 18, height: 18, color: '#9CA3AF' }} />
+              <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                {challenge.completionsCount}
+              </Typography>
+            </Box>
+
+            {challenge.timeLimit && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <AccessTimeIcon sx={{ width: 18, height: 18, color: '#9CA3AF' }} />
+                <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
+                  {challenge.timeLimit}ч
+                </Typography>
+              </Box>
+            )}
+          </Stack>
+
+          <Button
+            component={Link}
+            href={`/profile/${challenge.creator.username}`}
+            sx={{
+              textTransform: 'none',
+              minWidth: 'auto',
+              p: 0,
+              '&:hover': { 
+                bgcolor: 'transparent'
+              }
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Box
+                sx={{
+                  width: 24,
+                  height: 24,
+                  position: 'relative',
+                  borderRadius: '50%',
+                  overflow: 'hidden'
+                }}
+              >
+                <Image
+                  src={challenge.creator.avatarUrl}
+                  alt={challenge.creator.username}
+                  fill
+                  style={{ objectFit: 'cover' }}
+                />
+              </Box>
+              <Typography 
+                sx={{
+                  color: '#4B5563',
+                  fontSize: '13px',
+                  fontWeight: 500
+                }}
+              >
+                {challenge.creator.username}
+              </Typography>
+            </Stack>
+          </Button>
+        </Box>
+
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            color: '#6B7280',
+            fontSize: '14px',
+            mt: 2
+          }}
+        >
           {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}
-        </div>
-      </div>
-    </div>
+        </Typography>
+      </CardContent>
+    </Card>
   )
 } 
