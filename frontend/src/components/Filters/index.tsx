@@ -8,7 +8,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Stack
+  Stack,
+  SelectChangeEvent
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import InputAdornment from '@mui/material/InputAdornment'
@@ -28,11 +29,14 @@ export default function Filters({
   const [category, setCategory] = useState('all')
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
 
-  // Use useEffect for initial value setup
+  // Use useEffect for initial value setup and when dependencies change
   useEffect(() => {
     onCategoryChange?.(category)
+  }, [category, onCategoryChange])
+
+  useEffect(() => {
     onSortChange?.(sortBy)
-  }, [])
+  }, [sortBy, onSortChange])
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
@@ -40,16 +44,14 @@ export default function Filters({
     onSearch?.(value)
   }
 
-  const handleCategoryChange = (event: any) => {
+  const handleCategoryChange = (event: SelectChangeEvent<string>) => {
     const value = event.target.value
     setCategory(value)
-    onCategoryChange?.(value)
   }
 
-  const handleSortChange = (event: any) => {
+  const handleSortChange = (event: SelectChangeEvent<'newest' | 'popular' | 'points'>) => {
     const value = event.target.value as 'newest' | 'popular' | 'points'
     setSortBy(value)
-    onSortChange?.(value)
   }
 
   return (
