@@ -11,14 +11,14 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
 
-  // Фильтрация челленджей
+  // Filter challenges
   const filteredChallenges = mockChallenges.filter(challenge => {
-    // Фильтр по категории
+    // Filter by category
     if (selectedCategory !== 'all' && challenge.category !== selectedCategory) {
       return false
     }
     
-    // Фильтр по поисковому запросу
+    // Filter by search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       return (
@@ -30,7 +30,7 @@ export default function Home() {
     return true
   })
 
-  // Сортировка челленджей
+  // Sort challenges
   const sortedChallenges = [...filteredChallenges].sort((a, b) => {
     switch (sortBy) {
       case 'newest':
@@ -88,7 +88,7 @@ export default function Home() {
         ))}
       </Box>
 
-      {/* Сообщение, если нет челленджей */}
+      {/* Message when no challenges found */}
       {sortedChallenges.length === 0 && (
         <Box 
           sx={{ 
@@ -105,7 +105,7 @@ export default function Home() {
               mb: 1
             }}
           >
-            Челленджи не найдены
+            No challenges found
           </Box>
           <Box 
             component="p" 
@@ -113,7 +113,7 @@ export default function Home() {
               color: 'text.secondary'
             }}
           >
-            Попробуйте изменить параметры фильтрации или создайте свой челлендж!
+            Try adjusting your filters or create your own challenge!
           </Box>
         </Box>
       )}

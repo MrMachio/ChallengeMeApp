@@ -28,7 +28,7 @@ export default function Filters({
   const [category, setCategory] = useState('all')
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
 
-  // Используем useEffect для начальной установки значений
+  // Use useEffect for initial value setup
   useEffect(() => {
     onCategoryChange?.(category)
     onSortChange?.(sortBy)
@@ -63,7 +63,7 @@ export default function Filters({
       }}
     >
       <TextField
-        placeholder="Поиск заданий..."
+        placeholder="Search challenges..."
         value={searchQuery}
         onChange={handleSearchChange}
         InputProps={{
@@ -103,23 +103,23 @@ export default function Filters({
             minWidth: { xs: '100%', sm: 200 }
           }}
         >
-          <InputLabel>Категория</InputLabel>
+          <InputLabel>Category</InputLabel>
           <Select
             value={category}
-            label="Категория"
+            label="Category"
             onChange={handleCategoryChange}
             sx={{
               borderRadius: '100px',
               backgroundColor: 'background.paper'
             }}
           >
-            <MenuItem value="all">Все</MenuItem>
-            <MenuItem value="Educational">Образование</MenuItem>
-            <MenuItem value="Environmental">Экология</MenuItem>
-            <MenuItem value="Sports">Спорт</MenuItem>
-            <MenuItem value="Creative">Творчество</MenuItem>
-            <MenuItem value="Social">Социальное</MenuItem>
-            <MenuItem value="Other">Другое</MenuItem>
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="Educational">Educational</MenuItem>
+            <MenuItem value="Environmental">Environmental</MenuItem>
+            <MenuItem value="Sports">Sports</MenuItem>
+            <MenuItem value="Creative">Creative</MenuItem>
+            <MenuItem value="Social">Social</MenuItem>
+            <MenuItem value="Other">Other</MenuItem>
           </Select>
         </FormControl>
 
@@ -128,19 +128,19 @@ export default function Filters({
             minWidth: { xs: '100%', sm: 200 }
           }}
         >
-          <InputLabel>Сортировка</InputLabel>
+          <InputLabel>Sort by</InputLabel>
           <Select
             value={sortBy}
-            label="Сортировка"
+            label="Sort by"
             onChange={handleSortChange}
             sx={{
               borderRadius: '100px',
               backgroundColor: 'background.paper'
             }}
           >
-            <MenuItem value="popular">Популярные</MenuItem>
-            <MenuItem value="newest">Новые</MenuItem>
-            <MenuItem value="points">По очкам</MenuItem>
+            <MenuItem value="popular">Popular</MenuItem>
+            <MenuItem value="newest">Newest</MenuItem>
+            <MenuItem value="points">By Points</MenuItem>
           </Select>
         </FormControl>
       </Stack>

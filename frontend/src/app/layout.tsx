@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import Header from "@/components/Header";
 import { AuthProvider } from "@/lib/providers/AuthProvider";
 import ThemeProvider from "@/lib/providers/ThemeProvider";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: 'swap',
-});
+import { Box } from "@mui/material";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Challenge Me",
@@ -21,11 +17,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body style={{ margin: 0 }}>
         <ThemeProvider>
           <AuthProvider>
-            <Header />
-            {children}
+            <Box component="main" sx={{ minHeight: '100vh' }}>
+              <Header />
+              {children}
+            </Box>
           </AuthProvider>
         </ThemeProvider>
       </body>

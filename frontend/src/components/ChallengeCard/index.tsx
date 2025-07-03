@@ -52,11 +52,11 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
 
   const getDifficultyColor = (difficulty: string) => {
     switch(difficulty.toLowerCase()) {
-      case 'легкий':
+      case 'easy':
         return { bg: '#E8F5E9', color: '#2E7D32' }
-      case 'средний':
+      case 'medium':
         return { bg: '#FFF3E0', color: '#E65100' }
-      case 'сложный':
+      case 'hard':
         return { bg: '#FFEBEE', color: '#C62828' }
       default:
         return { bg: '#E8F5E9', color: '#2E7D32' }
@@ -108,7 +108,7 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
               justifyContent: 'center'
             }}
           >
-            <Typography color="text.secondary">Нет изображения</Typography>
+            <Typography color="text.secondary">No image</Typography>
           </Box>
         )}
         <Box

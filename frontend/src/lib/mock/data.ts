@@ -62,7 +62,7 @@ export const mockChallenges = [
     title: '30 Days of Coding',
     description: 'Code at least 1 hour every day for 30 days straight. Share your progress daily!',
     category: 'Educational',
-    difficulty: 'Средний',
+    difficulty: 'Medium',
     points: 500,
     timeLimit: 720, // 30 days in hours
     creatorId: 'user1',
@@ -80,7 +80,7 @@ export const mockChallenges = [
     title: 'Zero Waste Week',
     description: 'Live a week without producing any non-recyclable waste. Document your journey!',
     category: 'Environmental',
-    difficulty: 'Легкий',
+    difficulty: 'Easy',
     points: 300,
     timeLimit: 168, // 7 days in hours
     creatorId: 'user2',
@@ -98,7 +98,7 @@ export const mockChallenges = [
     title: '5K Training Challenge',
     description: 'Train and complete a 5K run. Perfect for beginners!',
     category: 'Sports',
-    difficulty: 'Сложный',
+    difficulty: 'Hard',
     points: 400,
     timeLimit: 336, // 14 days in hours
     creatorId: 'user3',
@@ -116,7 +116,7 @@ export const mockChallenges = [
     title: 'Digital Art Portfolio',
     description: 'Create one digital artwork every day for 7 days to build your portfolio',
     category: 'Creative',
-    difficulty: 'Средний',
+    difficulty: 'Medium',
     points: 350,
     timeLimit: 168, // 7 days in hours
     creatorId: 'user4',
@@ -134,7 +134,7 @@ export const mockChallenges = [
     title: '21 Days of Meditation',
     description: 'Build a daily meditation practice. Start with 5 minutes and work your way up to 20 minutes.',
     category: 'Other',
-    difficulty: 'Легкий',
+    difficulty: 'Easy',
     points: 450,
     timeLimit: 504, // 21 days in hours
     creatorId: 'user5',
@@ -152,7 +152,7 @@ export const mockChallenges = [
     title: 'Community Clean-up',
     description: 'Organize and lead a community clean-up event in your local area',
     category: 'Social',
-    difficulty: 'Средний',
+    difficulty: 'Medium',
     points: 600,
     timeLimit: 72, // 3 days in hours
     creatorId: 'user2',
@@ -170,7 +170,7 @@ export const mockChallenges = [
     title: 'Learn a New Language',
     description: 'Complete 30 minutes of language learning daily for 30 days',
     category: 'Educational',
-    difficulty: 'Сложный',
+    difficulty: 'Hard',
     points: 550,
     timeLimit: 720, // 30 days in hours
     creatorId: 'user1',

@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Маршруты, которые не требуют аутентификации
+// Routes that don't require authentication
 const publicRoutes = [
   '/login',
   '/register',
   '/api/auth',
 ]
 
-// Статические файлы и системные маршруты
+// Static files and system routes
 const systemRoutes = [
   '/_next',
   '/favicon.ico',
@@ -18,7 +18,7 @@ const systemRoutes = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Пропускаем системные маршруты и статические файлы
+  // Skip system routes and static files
   if (
     systemRoutes.some(route => pathname.startsWith(route)) ||
     pathname.includes('.')
@@ -26,12 +26,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Пропускаем публичные маршруты
+  // Skip public routes
   if (publicRoutes.some(route => pathname.startsWith(route))) {
     return NextResponse.next()
   }
 
-  // Главная страница доступна всем
+  // Home page is accessible to everyone
   if (pathname === '/') {
     return NextResponse.next()
   }

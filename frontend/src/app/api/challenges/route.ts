@@ -9,8 +9,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Здесь должен быть код для получения челленджей из базы данных
-    // Пример заглушки:
+    // Code for fetching challenges from the database should be here
+    // Example stub:
     return NextResponse.json([
       {
         id: '1',
@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json()
 
-    // Здесь должен быть код для сохранения челленджа в базу данных
-    // Пример заглушки:
+    // Code for saving the challenge to the database should be here
+    // Example stub:
     const challenge = {
       id: Math.random().toString(36).substr(2, 9),
       ...data,
