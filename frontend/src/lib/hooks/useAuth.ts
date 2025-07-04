@@ -1,21 +1,29 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
+import { mockCurrentUser } from '../mock/data'
 
 // Тестовый пользователь
 const TEST_USER = {
-  id: 'test-user-id',
-  email: 'test@example.com',
-  username: 'TestUser',
-  avatarUrl: '/images/avatars/default.svg',
-  points: 100
+  id: mockCurrentUser.id,
+  email: mockCurrentUser.email,
+  username: mockCurrentUser.username,
+  avatarUrl: mockCurrentUser.avatarUrl,
+  points: mockCurrentUser.points,
+  completedChallenges: mockCurrentUser.completedChallenges,
+  activeChallenges: mockCurrentUser.activeChallenges,
+  createdChallenges: mockCurrentUser.createdChallenges
 }
 
 export interface User {
   id: string
   email: string
-  username?: string
+  username: string
+  fullName?: string
   avatarUrl?: string
-  points?: number
+  points: number
+  completedChallenges: string[]
+  activeChallenges: string[]
+  createdChallenges: string[]
 }
 
 export function useAuth() {
@@ -46,12 +54,16 @@ export function useAuth() {
     // Имитируем задержку запроса
     await new Promise(resolve => setTimeout(resolve, 1000))
     
-    // Создаем нового пользователя на основе тестового
+    // Создаем нового пользователя
     const newUser = {
-      ...TEST_USER,
+      id: `user${Date.now()}`,
       email,
       username,
-      points: 0
+      avatarUrl: '/images/avatars/default.svg',
+      points: 0,
+      completedChallenges: [],
+      activeChallenges: [],
+      createdChallenges: []
     }
     
     setUser(newUser)

@@ -4,6 +4,15 @@ import { createClient } from "@/lib/supabase/server";
 const f = createUploadthing();
 
 export const ourFileRouter = {
+  imageUploader: f({ image: { maxFileSize: "4MB" } })
+    .middleware(async () => {
+      return { userId: "test" };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Upload complete for userId:", metadata.userId);
+      console.log("File URL:", file.url);
+    }),
+
   challengeImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .middleware(async () => {
       const supabase = await createClient();

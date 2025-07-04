@@ -11,35 +11,34 @@ interface Challenge {
   id: string
   title: string
   description: string
-  image_url: string
-  created_at: string
-  user_id: string
+  imageUrl: string | null
+  createdAt: string
+  creatorId: string
   category: string
   difficulty: string
   points: number
   rules: string[]
   creator: {
     username: string
-    avatar_url: string | null
+    avatarUrl: string | null
   }
   likes: Array<{ user_id: string }>
   comments: Array<{
     id: string
     content: string
-    created_at: string
+    createdAt: string
     user: {
       username: string
-      avatar_url: string | null
+      avatarUrl: string | null
     }
   }>
   completions: Array<{
     id: string
-    proof_url: string
     status: 'pending' | 'approved' | 'rejected'
-    created_at: string
+    createdAt: string
     user: {
       username: string
-      avatar_url: string | null
+      avatarUrl: string | null
     }
   }>
 }
@@ -76,14 +75,14 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
     return <div>Challenge not found</div>
   }
 
-  const isOwner = user?.id === challenge.user_id
+  const isOwner = user?.id === challenge.creatorId
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
         <div className="relative h-96">
           <Image
-            src={challenge.image_url || '/images/cooking.jpg'}
+            src={challenge.imageUrl || '/images/challenges/default.jpg'}
             alt={challenge.title}
             fill
             className="object-cover"
@@ -136,7 +135,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
           <div className="flex items-center justify-between">
             <Link href={`/profile/${challenge.creator.username}`} className="flex items-center gap-3">
               <Image
-                src={challenge.creator.avatar_url || '/images/avatars/default.svg'}
+                src={challenge.creator.avatarUrl || '/images/avatars/default.svg'}
                 alt={challenge.creator.username}
                 width={40}
                 height={40}
@@ -145,7 +144,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
               <div>
                 <p className="text-sm font-medium">{challenge.creator.username}</p>
                 <p className="text-sm text-gray-500">
-                  {formatDistanceToNow(new Date(challenge.created_at), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}
                 </p>
               </div>
             </Link>
@@ -164,7 +163,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             <div key={completion.id} className="flex items-center justify-between">
               <Link href={`/profile/${completion.user.username}`} className="flex items-center gap-3">
                 <Image
-                  src={completion.user.avatar_url || '/images/avatars/default.svg'}
+                  src={completion.user.avatarUrl || '/images/avatars/default.svg'}
                   alt={completion.user.username}
                   width={40}
                   height={40}
@@ -195,7 +194,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
           {challenge.comments.map((comment) => (
             <div key={comment.id} className="flex items-start gap-3">
               <Image
-                src={comment.user.avatar_url || '/images/avatars/default.svg'}
+                src={comment.user.avatarUrl || '/images/avatars/default.svg'}
                 alt={comment.user.username}
                 width={32}
                 height={32}
@@ -205,7 +204,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-gray-900">{comment.user.username}</p>
                   <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
                   </span>
                 </div>
                 <p className="text-gray-600">{comment.content}</p>

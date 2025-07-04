@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { UploadButton } from '@/lib/uploadthing'
 import {
   Dialog,
   DialogTitle,
@@ -16,8 +15,13 @@ import {
   Button,
   Box,
   Stack,
-  FormHelperText,
+  IconButton,
+  Typography,
 } from '@mui/material'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import { challengesApi } from '@/lib/api/challenges'
+import { imagesApi } from '@/lib/api/images'
+import { mockCategories } from '@/lib/mock/data'
 
 interface CreateChallengeModalProps {
   isOpen: boolean
@@ -32,9 +36,17 @@ export default function CreateChallengeModal({
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('')
   const [difficulty, setDifficulty] = useState('')
-  const [imageUrl, setImageUrl] = useState('')
+  const [points, setPoints] = useState<number>(100)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setSelectedFile(event.target.files[0])
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,30 +57,30 @@ export default function CreateChallengeModal({
     }
 
     try {
-      const response = await fetch('/api/challenges', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await user.keycloak?.token}`
-        },
-        body: JSON.stringify({
-          title,
-          description,
-          category,
-          difficulty,
-          image_url: imageUrl,
-        }),
-      })
+      setIsLoading(true)
 
-      if (!response.ok) {
-        throw new Error('Failed to create challenge')
+      // Загружаем изображение
+      let imageUrl = '/images/challenges/default.jpg'
+      if (selectedFile) {
+        imageUrl = await imagesApi.upload(selectedFile)
       }
 
-      const challenge = await response.json()
-      router.push(`/challenge/${challenge.id}`)
+      // Создаем задание
+      const challenge = await challengesApi.create({
+        title,
+        description,
+        category,
+        difficulty,
+        imageUrl,
+        points
+      }, user.id)
+
+      router.refresh() // Обновляем список заданий на главной странице
       onClose()
     } catch (error) {
       console.error('Error creating challenge:', error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -121,10 +133,11 @@ export default function CreateChallengeModal({
                 <MenuItem value="">
                   <em>Select category</em>
                 </MenuItem>
-                <MenuItem value="fitness">Fitness</MenuItem>
-                <MenuItem value="learning">Learning</MenuItem>
-                <MenuItem value="creativity">Creativity</MenuItem>
-                <MenuItem value="lifestyle">Lifestyle</MenuItem>
+                {mockCategories.map(cat => (
+                  <MenuItem key={cat.id} value={cat.name}>
+                    {cat.icon} {cat.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             
@@ -138,32 +151,46 @@ export default function CreateChallengeModal({
                 <MenuItem value="">
                   <em>Select difficulty</em>
                 </MenuItem>
-                <MenuItem value="easy">Easy</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="hard">Hard</MenuItem>
+                <MenuItem value="Easy">Easy</MenuItem>
+                <MenuItem value="Medium">Medium</MenuItem>
+                <MenuItem value="Hard">Hard</MenuItem>
               </Select>
             </FormControl>
+
+            <TextField
+              label="Points"
+              type="number"
+              value={points}
+              onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
+              fullWidth
+              required
+              variant="outlined"
+              inputProps={{ min: 0 }}
+            />
             
             <Box>
-              <FormControl fullWidth>
-                <InputLabel shrink>Image</InputLabel>
-                <Box sx={{ mt: 3 }}>
-                  <UploadButton
-                    endpoint="imageUploader"
-                    onClientUploadComplete={(res) => {
-                      if (res?.[0]) {
-                        setImageUrl(res[0].url)
-                      }
-                    }}
-                    onUploadError={(error: Error) => {
-                      console.error('Upload error:', error)
-                    }}
-                  />
-                </Box>
-                {imageUrl && (
-                  <FormHelperText>Image uploaded successfully</FormHelperText>
-                )}
-              </FormControl>
+              <input
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="challenge-image"
+                type="file"
+                onChange={handleFileSelect}
+              />
+              <label htmlFor="challenge-image">
+                <Button
+                  component="span"
+                  variant="outlined"
+                  startIcon={<CloudUploadIcon />}
+                  sx={{ mb: 1 }}
+                >
+                  Upload Image
+                </Button>
+              </label>
+              {selectedFile && (
+                <Typography variant="body2" color="textSecondary">
+                  Selected file: {selectedFile.name}
+                </Typography>
+              )}
             </Box>
             
             <Stack direction="row" spacing={2} justifyContent="flex-end">
@@ -171,6 +198,7 @@ export default function CreateChallengeModal({
                 onClick={onClose}
                 variant="outlined"
                 color="inherit"
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -178,8 +206,9 @@ export default function CreateChallengeModal({
                 type="submit"
                 variant="contained"
                 color="primary"
+                disabled={isLoading}
               >
-                Create
+                {isLoading ? 'Creating...' : 'Create'}
               </Button>
             </Stack>
           </Stack>

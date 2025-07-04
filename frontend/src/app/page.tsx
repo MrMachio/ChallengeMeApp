@@ -1,25 +1,74 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Container, Box } from '@mui/material'
+import {useState, useMemo} from 'react'
+import {Container, Box, Typography, Button, Fab} from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
 import ChallengeCard from '@/components/ChallengeCard'
 import Filters from '@/components/Filters'
-import { mockChallenges } from '@/lib/mock/data'
+import CreateChallengeModal from '@/components/CreateChallengeModal'
+import {mockChallenges, mockChallengeLikes, mockCompletions} from '@/lib/mock/data'
+import { useAuth } from '@/lib/hooks/useAuth'
+
+export type Category = "Educational" | "Environmental" | "Sports" | "Creative" | "Social" | "Other";
+export type SortField = 'none' | 'completions' | 'points' | 'likes';
+export type SortDirection = 'asc' | 'desc';
+export type ChallengeStatus = 'all' | 'completed' | 'active' | 'created' | 'available';
+
+export interface SortConfig {
+  field: SortField;
+  direction: SortDirection;
+}
 
 export default function Home() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'points'>('popular')
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+  const [selectedStatus, setSelectedStatus] = useState<ChallengeStatus>('all')
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'none', direction: 'desc' })
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const { user } = useAuth()
 
   // Filter and sort challenges using useMemo
   const sortedChallenges = useMemo(() => {
     // Filter challenges
     const filtered = mockChallenges.filter(challenge => {
       // Filter by category
-      if (selectedCategory !== 'all' && challenge.category !== selectedCategory) {
+      if (selectedCategories.length > 0 && !selectedCategories.includes(challenge.category as Category)) {
         return false
       }
-      
+
+      // Filter by status
+      if (selectedStatus !== 'all') {
+        // Если пользователь не авторизован, показываем только доступные задачи
+        if (!user) {
+          return selectedStatus === 'available';
+        }
+
+        const challengeId = challenge.id.toString();
+        console.log('Filtering challenge:', {
+          challengeId,
+          selectedStatus,
+          userCompletedChallenges: user.completedChallenges,
+          userActiveChallenges: user.activeChallenges,
+          challengeCreatorId: challenge.creatorId,
+          userId: user.id
+        });
+        
+        switch (selectedStatus) {
+          case 'completed':
+            return user.completedChallenges.includes(challengeId);
+          case 'active':
+            return user.activeChallenges.includes(challengeId);
+          case 'created':
+            return challenge.creatorId === user.id;
+          case 'available':
+            return !user.completedChallenges.includes(challengeId) && 
+                   !user.activeChallenges.includes(challengeId) && 
+                   challenge.creatorId !== user.id;
+          default:
+            return true;
+        }
+      }
+
       // Filter by search query
       if (searchQuery) {
         const query = searchQuery.toLowerCase()
@@ -32,46 +81,57 @@ export default function Home() {
       return true
     })
 
+    // If no sorting selected, return filtered array as is
+    if (sortConfig.field === 'none') {
+      return filtered;
+    }
+
     // Sort challenges
     return [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'newest':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        case 'popular':
-          return b.likesCount - a.likesCount
+      const multiplier = sortConfig.direction === 'desc' ? -1 : 1;
+      
+      switch (sortConfig.field) {
+        case 'completions':
+          const completionsA = (mockCompletions[a.id.toString()] || []).length;
+          const completionsB = (mockCompletions[b.id.toString()] || []).length;
+          return (completionsA - completionsB) * multiplier;
         case 'points':
-          return b.points - a.points
+          return (a.points - b.points) * multiplier;
+        case 'likes':
+          const likesA = (mockChallengeLikes[a.id.toString()] || []).length;
+          const likesB = (mockChallengeLikes[b.id.toString()] || []).length;
+          return (likesA - likesB) * multiplier;
         default:
-          return 0
+          return 0;
       }
     })
-  }, [searchQuery, selectedCategory, sortBy])
+  }, [searchQuery, selectedCategories, selectedStatus, sortConfig, user])
 
   return (
-    <Container 
-      maxWidth="lg" 
-      sx={{ 
+    <Container
+      maxWidth="lg"
+      sx={{
         py: 2,
         display: 'flex',
         flexDirection: 'column',
         gap: 3
       }}
     >
-      <Box 
-        sx={{
-          width: '100%',
-          maxWidth: '1200px',
-          margin: '0 !important'
-        }}
-      >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Filters
-          onSearch={setSearchQuery}
-          onCategoryChange={setSelectedCategory}
-          onSortChange={setSortBy}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          selectedCategories={selectedCategories}
+          setSelectedCategories={setSelectedCategories}
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          sortConfig={sortConfig}
+          setSortConfig={setSortConfig}
+          user={user}
         />
       </Box>
 
-      <Box 
+      <Box
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -92,39 +152,67 @@ export default function Home() {
         }}
       >
         {sortedChallenges.map(challenge => (
-          <ChallengeCard key={challenge.id} challenge={challenge} />
+          <ChallengeCard key={challenge.id} challenge={challenge}/>
         ))}
       </Box>
 
       {/* Message when no challenges found */}
       {sortedChallenges.length === 0 && (
-        <Box 
-          sx={{ 
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
             textAlign: 'center',
-            py: 6
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: 'calc(100vw - 300px)'
           }}
         >
-          <Box 
-            component="h3" 
-            sx={{ 
-              fontSize: '1.25rem',
-              fontWeight: 500,
+          <Typography
+            variant="h3"
+            sx={{
               color: 'text.primary',
-              mb: 1
             }}
           >
             No challenges found
-          </Box>
-          <Box 
-            component="p" 
-            sx={{ 
+          </Typography>
+          <Typography
+            sx={{
               color: 'text.secondary'
             }}
           >
             Try adjusting your filters or create your own challenge!
-          </Box>
+          </Typography>
         </Box>
       )}
+
+      {/* Floating action button */}
+      {user && (
+        <Fab
+          color="primary"
+          aria-label="add"
+          onClick={() => setIsCreateModalOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 32,
+            right: 32,
+            background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+            '&:hover': {
+              background: 'linear-gradient(45deg, #1976D2 30%, #21CBF3 90%)',
+            },
+            boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+            zIndex: 1000
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      )}
+
+      <CreateChallengeModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
     </Container>
   )
 }

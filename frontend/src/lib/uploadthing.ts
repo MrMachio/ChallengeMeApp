@@ -1,5 +1,7 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import keycloak from "./keycloak";
+import { generateComponents } from "@uploadthing/react";
+import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
 const f = createUploadthing();
 
@@ -24,4 +26,6 @@ export const ourFileRouter = {
     }),
 } satisfies FileRouter;
 
-export type OurFileRouter = typeof ourFileRouter; 
+export type OurFileRouter = typeof ourFileRouter;
+
+export const { UploadButton, UploadDropzone, useUploadThing } = generateComponents<OurFileRouter>(); 
