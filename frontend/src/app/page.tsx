@@ -18,9 +18,6 @@ export interface SortConfig {
   field: SortField;
   direction: SortDirection;
 }
-"use client";
-
-import NavBar from "./components/NavBar";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -243,17 +240,4 @@ export default function Home() {
       />
     </Container>
   )
-  return (
-    <>
-      <NavBar />
-       <div className="bg-[#EBEFF4] min-h-screen">
-      <main className="pt-6 px-6">
-        <h1></h1>
-        <p className="text-lg text-gray-700 mb-6">
-
-        </p>
-      </main>
-      </div>
-    </>
-  );
 }

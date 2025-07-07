@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KRISTIYAN/Documents/Github/ChallengeMeApp/ChallengeMeApp/frontend/src/app/page.tsx"],"sourcesContent":["\"use client\";\r\n\r\nimport NavBar from \"./components/NavBar\";\r\n\r\nexport default function Home() {\r\n  return (\r\n    <>\r\n      <NavBar />\r\n       <div className=\"bg-[#EBEFF4] min-h-screen\">\r\n      <main className=\"pt-6 px-6\">\r\n        <h1></h1>\r\n        <p className=\"text-lg text-gray-700 mb-6\">\r\n          \r\n        </p>\r\n      </main>\r\n      </div>\r\n    </>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;AAEA;AAFA;;;AAIe,SAAS;IACtB,qBACE;;0BACE,8OAAC,mIAAA,CAAA,UAAM;;;;;0BACN,8OAAC;gBAAI,WAAU;0BAChB,cAAA,8OAAC;oBAAK,WAAU;;sCACd,8OAAC;;;;;sCACD,8OAAC;4BAAE,WAAU;;;;;;;;;;;;;;;;;;;AAOrB","debugId":null}},
-    {"offset": {"line": 68, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KRISTIYAN/Documents/Github/ChallengeMeApp/ChallengeMeApp/frontend/node_modules/next/src/server/route-modules/app-page/vendored/ssr/react-jsx-dev-runtime.ts"],"sourcesContent":["module.exports = require('../../module.compiled').vendored[\n  'react-ssr'\n].ReactJsxDevRuntime\n"],"names":["module","exports","require","vendored","ReactJsxDevRuntime"],"mappings":";AAAAA,OAAOC,OAAO,GAAGC,QAAQ,4HAAyBC,QAAQ,CACxD,YACD,CAACC,kBAAkB","ignoreList":[0],"debugId":null}}]
-}
