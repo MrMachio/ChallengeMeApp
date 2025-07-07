@@ -20,11 +20,15 @@ import {
 } from '@mui/material'
 import { useState } from 'react'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
+import LoginModal from '@/components/AuthModals/LoginModal'
+import SignUpModal from '@/components/AuthModals/SignUpModal'
 
 export default function Header() {
   const { user, signOut, loading } = useAuth()
   const router = useRouter()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
+  const [openLogin, setOpenLogin] = useState(false)
+  const [openSignUp, setOpenSignUp] = useState(false)
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -48,6 +52,16 @@ export default function Header() {
     } catch (error) {
       console.error('Error signing out:', error)
     }
+  }
+
+  const handleLoginOpen = () => {
+    setOpenSignUp(false)
+    setOpenLogin(true)
+  }
+
+  const handleSignUpOpen = () => {
+    setOpenLogin(false)
+    setOpenSignUp(true)
   }
 
   return (
@@ -79,18 +93,27 @@ export default function Header() {
                 <CircularProgress size={24} />
               ) : user ? (
                 <>
-                  <Chip
-                    icon={<EmojiEventsIcon />}
-                    label={user.points}
+                  <Button
+                    variant="contained"
+                    startIcon={<EmojiEventsIcon />}
                     sx={{
-                      bgcolor: 'amber.100',
-                      color: 'amber.800',
-                      '& .MuiChip-icon': {
-                        color: 'inherit'
+                      background: "linear-gradient(to right, #fbc02d, #ff9800)",
+                      borderRadius: "24px",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      color: "white",
+                      px: 2,
+                      py: 0.5,
+                      minWidth: 0,
+                      boxShadow: '0 2px 8px rgba(251, 192, 45, 0.3)',
+                      "&:hover": {
+                        background: "linear-gradient(to right, #f9a825, #fb8c00)",
+                        boxShadow: '0 4px 12px rgba(251, 192, 45, 0.4)',
                       },
-                      fontWeight: 500
                     }}
-                  />
+                  >
+                    {user.points}
+                  </Button>
                   <IconButton
                     onClick={handleOpenMenu}
                     sx={{
@@ -126,27 +149,27 @@ export default function Header() {
               ) : (
                 <Box sx={{ display: 'flex', gap: 1.5 }}>
                   <Button
-                    component={Link}
-                    href="/login"
+                    onClick={handleLoginOpen}
                     variant="text"
                     sx={{
                       borderRadius: '9999px',
                       color: 'text.primary'
                     }}
+                    data-testid="header-login-button"
                   >
                     Login
                   </Button>
                   <Button
-                    component={Link}
-                    href="/register"
+                    onClick={handleSignUpOpen}
                     variant="contained"
                     sx={{
                       borderRadius: '9999px',
-                      bgcolor: 'purple.600',
+                      background: 'linear-gradient(45deg, #6366f1 30%, #8b5cf6 90%)',
                       '&:hover': {
-                        bgcolor: 'purple.700'
+                        background: 'linear-gradient(45deg, #4f46e5 30%, #7c3aed 90%)',
                       }
                     }}
+                    data-testid="header-signup-button"
                   >
                     Register
                   </Button>
@@ -157,6 +180,17 @@ export default function Header() {
         </Container>
       </AppBar>
 
+      <LoginModal
+        open={openLogin}
+        onClose={() => setOpenLogin(false)}
+        onSignUpClick={handleSignUpOpen}
+      />
+
+      <SignUpModal
+        open={openSignUp}
+        onClose={() => setOpenSignUp(false)}
+        onLoginClick={handleLoginOpen}
+      />
     </>
   )
 } 
