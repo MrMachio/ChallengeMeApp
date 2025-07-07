@@ -18,6 +18,9 @@ export interface SortConfig {
   field: SortField;
   direction: SortDirection;
 }
+"use client";
+
+import NavBar from "./components/NavBar";
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('')
@@ -67,7 +70,7 @@ export default function Home() {
           challengeCreatorId: challenge.creatorId,
           userId: user.id
         });
-        
+
         switch (selectedStatus) {
           case 'completed':
             return user.completedChallenges.includes(challengeId);
@@ -76,8 +79,8 @@ export default function Home() {
           case 'created':
             return challenge.creatorId === user.id;
           case 'available':
-            return !user.completedChallenges.includes(challengeId) && 
-                   !user.activeChallenges.includes(challengeId) && 
+            return !user.completedChallenges.includes(challengeId) &&
+                   !user.activeChallenges.includes(challengeId) &&
                    challenge.creatorId !== user.id;
           default:
             return true;
@@ -104,7 +107,7 @@ export default function Home() {
     // Sort challenges
     return [...filtered].sort((a, b) => {
       const multiplier = sortConfig.direction === 'desc' ? -1 : 1;
-      
+
       switch (sortConfig.field) {
         case 'completions':
           const completionsA = (mockCompletions[a.id.toString()] || []).length;
@@ -240,4 +243,17 @@ export default function Home() {
       />
     </Container>
   )
+  return (
+    <>
+      <NavBar />
+       <div className="bg-[#EBEFF4] min-h-screen">
+      <main className="pt-6 px-6">
+        <h1></h1>
+        <p className="text-lg text-gray-700 mb-6">
+
+        </p>
+      </main>
+      </div>
+    </>
+  );
 }

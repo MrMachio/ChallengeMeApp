@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/KRISTIYAN/Documents/Github/ChallengeMeApp/ChallengeMeApp/frontend/src/app/ThemeRegistry.tsx"],"sourcesContent":["\"use client\";\r\nimport * as React from \"react\";\r\nimport { ThemeProvider, CssBaseline } from \"@mui/material\";\r\nimport { createTheme } from \"@mui/material/styles\";\r\n\r\nconst theme = createTheme({\r\n  // You can customize your theme here\r\n});\r\n\r\nexport default function ThemeRegistry({ children }: { children: React.ReactNode }) {\r\n  return (\r\n    <ThemeProvider theme={theme}>\r\n      <CssBaseline />\r\n      {children}\r\n    </ThemeProvider>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;AAEA;AAAA;AACA;AAHA;;;;AAKA,MAAM,QAAQ,CAAA,GAAA,8MAAA,CAAA,cAAW,AAAD,EAAE;AAE1B;AAEe,SAAS,cAAc,EAAE,QAAQ,EAAiC;IAC/E,qBACE,6LAAC,kNAAA,CAAA,gBAAa;QAAC,OAAO;;0BACpB,6LAAC,mNAAA,CAAA,cAAW;;;;;YACX;;;;;;;AAGP;KAPwB","debugId":null}}]
+}
