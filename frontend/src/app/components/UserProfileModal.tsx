@@ -16,7 +16,6 @@ import {
 interface Friend {
   name: string;
   points: number;
-  online: boolean;
   avatar: string;
 }
 
@@ -73,7 +72,7 @@ export default function UserProfileModal({ open, onClose, user }: UserProfileMod
                 alignItems: 'center',
                 background: '#f5f8fa',
                 borderRadius: 2,
-                p: '3px',
+                padding: '3px',
                 width: '100%',
                 maxWidth: 500,
                 mx: 'auto',
@@ -104,7 +103,6 @@ export default function UserProfileModal({ open, onClose, user }: UserProfileMod
             </Box>
           </Box>
         </Box>
-        {/* Tab Content */}
         <Box p={3}>
           {selectedTab === 0 && (
             <Stack spacing={2}>
@@ -126,12 +124,7 @@ export default function UserProfileModal({ open, onClose, user }: UserProfileMod
                       <Typography fontSize={13} color="text.secondary">
                         {friend.points} points
                       </Typography>
-                      <Typography
-                        fontSize={12}
-                        color={friend.online ? "green" : "gray"}
-                      >
-                        {friend.online ? "Online" : "Offline"}
-                      </Typography>
+
                     </Box>
                   </Stack>
                   <Button size="small" variant="outlined" disabled>

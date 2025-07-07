@@ -16,7 +16,6 @@ import UserProfileModal from "./UserProfileModal";
 interface Friend {
   name: string;
   points: number;
-  online: boolean;
   avatar: string;
 }
 
@@ -33,19 +32,16 @@ const dummyFriends = [
   {
     name: "Anna Smith",
     points: 2340,
-    online: true,
     avatar: "/user.jpg",
   },
   {
     name: "John Doe",
     points: 1890,
-    online: false,
     avatar: "/user.jpg",
   },
   {
     name: "Maria Garcia",
     points: 3120,
-    online: true,
     avatar: "/user.jpg",
   },
 ];
@@ -57,6 +53,7 @@ export default function ProfileModal(props: ProfileModalProps) {
   const [points] = useState(1540);
   const [addFriendOpen, setAddFriendOpen] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
+  const [search, setSearch] = useState("");
 
   return (
     <>
@@ -163,8 +160,36 @@ export default function ProfileModal(props: ProfileModalProps) {
           <Box p={3}>
             {selectedTab === 0 && (
               <>
+                <Box mb={2}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    background: '#f5f8fa',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    padding: '8px 12px',
+                    marginBottom: '8px',
+                  }}>
+                    <span style={{ fontSize: 22, marginRight: 8 }}>🔍</span>
+                    <input
+                      type="text"
+                      placeholder="Search friends..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      style={{
+                        width: '100%',
+                        border: 'none',
+                        outline: 'none',
+                        background: 'transparent',
+                        fontWeight: 700,
+                        fontSize: '16px',
+                        color: '#222',
+                      }}
+                    />
+                  </div>
+                </Box>
                 <Stack spacing={2}>
-                  {friends.map((friend, index) => (
+                  {friends.filter(friend => friend.name.toLowerCase().includes(search.toLowerCase())).map((friend, index) => (
                     <Paper
                       key={index}
                       variant="outlined"
@@ -184,9 +209,14 @@ export default function ProfileModal(props: ProfileModalProps) {
                           </Typography>
                         </Box>
                       </Stack>
-                      <Button size="small" variant="outlined" onClick={() => setViewUser(friend)}>
-                        View
-                      </Button>
+                      <Stack direction="row" spacing={1}>
+                        <Button size="small" variant="outlined" onClick={() => setViewUser(friend)}>
+                          View
+                        </Button>
+                        <Button size="small" color="error" variant="outlined" onClick={() => setFriends(friends.filter(f => f !== friend))}>
+                          Remove
+                        </Button>
+                      </Stack>
                     </Paper>
                   ))}
                 </Stack>
@@ -222,7 +252,6 @@ export default function ProfileModal(props: ProfileModalProps) {
                         {
                           name: username,
                           points: 0,
-                          online: false,
                           avatar: "/user.jpg",
                         },
                       ]);

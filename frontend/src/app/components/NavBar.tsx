@@ -16,6 +16,7 @@ import LoginModal from "./LoginModal";
 import SignUpModal from "./SignUpModal";
 import ProfileModal from "./ProfileModal";
 
+
 export default function NavBar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [openLogin, setOpenLogin] = useState(false);
@@ -23,6 +24,7 @@ export default function NavBar() {
   const [openProfile, setOpenProfile] = useState(false);
   const [username, setUsername] = useState("John Smith");
   const [avatar, setAvatar] = useState<string>("/user.jpg");
+
   const handleLoginOpen = () => {
     setOpenSignUp(false);
     setOpenLogin(true);
@@ -54,11 +56,11 @@ export default function NavBar() {
         position="fixed"
         elevation={0}
         sx={{
-          backgroundColor: "#fff",
-          color: "#000",
+          backgroundColor: '#fff',
+          color: '#000',
           px: 3,
           py: 1,
-          borderBottom: "1px solid #eee",
+          borderBottom: '1px solid #eee',
         }}
       >
         <Toolbar sx={{ justifyContent: "space-between", alignItems: "center" }}>
@@ -86,6 +88,7 @@ export default function NavBar() {
           </Stack>
 
           <Stack direction="row" spacing={2} alignItems="center">
+
             <Button
               variant="contained"
               startIcon={<StarIcon />}
@@ -141,6 +144,7 @@ export default function NavBar() {
         avatar={avatar}
         setAvatar={setAvatar}
       />
+
     </>
   );
 }
