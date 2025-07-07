@@ -1,0 +1,2 @@
+CREATE DATABASE keycloak OWNER root;
+CREATE DATABASE app OWNER root;
