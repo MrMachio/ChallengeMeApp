@@ -20,7 +20,7 @@ import InputAdornment from '@mui/material/InputAdornment'
 import {TextFieldStyled} from "./styledWrappers";
 import {Category, SortConfig, SortField, SortDirection, ChallengeStatus} from "@/app/page";
 import { keyframes } from '@mui/system';
-import { User } from '@/lib/hooks/useAuth';
+import { User } from '@/lib/providers/AuthProvider';
 
 // Определяем анимации для стрелки
 const rotateUp = keyframes`

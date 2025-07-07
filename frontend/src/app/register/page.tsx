@@ -2,8 +2,17 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
-import Link from 'next/link'
+import { useAuth } from '@/lib/providers/AuthProvider'
+import NextLink from 'next/link'
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Link,
+  CircularProgress
+} from '@mui/material'
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
@@ -21,29 +30,80 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              sign in to your account
-            </Link>
-          </p>
-        </div>
-        <div>
-          <button
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'grey.50',
+        py: 6,
+        px: { xs: 2, sm: 3, lg: 4 }
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper
+          elevation={0}
+          sx={{
+            p: 4,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 3,
+            bgcolor: 'transparent'
+          }}
+        >
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography
+              component="h1"
+              variant="h4"
+              sx={{
+                mb: 1,
+                fontWeight: 700
+              }}
+            >
+              Create your account
+            </Typography>
+            <Typography color="text.secondary">
+              Or{' '}
+              <Link
+                component={NextLink}
+                href="/login"
+                sx={{
+                  color: 'primary.main',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline'
+                  }
+                }}
+              >
+                sign in to your account
+              </Link>
+            </Typography>
+          </Box>
+
+          <Button
             onClick={handleRegister}
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{
+              py: 1.5,
+              borderRadius: 2,
+              textTransform: 'none',
+              fontSize: '1rem'
+            }}
           >
-            {loading ? 'Creating account...' : 'Create account'}
-          </button>
-        </div>
-      </div>
-    </div>
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Create account'
+            )}
+          </Button>
+        </Paper>
+      </Container>
+    </Box>
   )
 }

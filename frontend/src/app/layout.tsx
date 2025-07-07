@@ -3,7 +3,6 @@ import Header from "@/components/Header";
 import { AuthProvider } from "@/lib/providers/AuthProvider";
 import ThemeProvider from "@/lib/providers/ThemeProvider";
 import { Box } from "@mui/material";
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Challenge Me",

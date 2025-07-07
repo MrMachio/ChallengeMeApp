@@ -1,12 +1,12 @@
 import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { createClient } from "@/lib/supabase/server";
 
 const f = createUploadthing();
 
 export const ourFileRouter = {
   imageUploader: f({ image: { maxFileSize: "4MB" } })
     .middleware(async () => {
-      return { userId: "test" };
+      // TODO: Replace with real Keycloak authentication
+      return { userId: "mock-user-id" };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);
@@ -15,12 +15,8 @@ export const ourFileRouter = {
 
   challengeImage: f({ image: { maxFileSize: "4MB", maxFileCount: 1 } })
     .middleware(async () => {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) throw new Error("Unauthorized");
-
-      return { userId: user.id };
+      // TODO: Replace with real Keycloak authentication
+      return { userId: "mock-user-id" };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);
@@ -32,12 +28,8 @@ export const ourFileRouter = {
     video: { maxFileSize: "16MB", maxFileCount: 1 }
   })
     .middleware(async () => {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) throw new Error("Unauthorized");
-
-      return { userId: user.id };
+      // TODO: Replace with real Keycloak authentication
+      return { userId: "mock-user-id" };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload complete for userId:", metadata.userId);

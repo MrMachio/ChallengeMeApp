@@ -1,13 +1,13 @@
 'use client'
 
-import {useState, useMemo} from 'react'
+import {useState, useMemo, useEffect} from 'react'
 import {Container, Box, Typography, Button, Fab} from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
-import ChallengeCard from '@/components/ChallengeCard'
+import ChallengeCard, { ChallengeCardSkeleton } from '@/components/ChallengeCard'
 import Filters from '@/components/Filters'
 import CreateChallengeModal from '@/components/CreateChallengeModal'
 import {mockChallenges, mockChallengeLikes, mockCompletions} from '@/lib/mock/data'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuth } from '@/lib/providers/AuthProvider'
 
 export type Category = "Educational" | "Environmental" | "Sports" | "Creative" | "Social" | "Other";
 export type SortField = 'none' | 'completions' | 'points' | 'likes';
@@ -25,12 +25,27 @@ export default function Home() {
   const [selectedStatus, setSelectedStatus] = useState<ChallengeStatus>('all')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'none', direction: 'desc' })
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [challenges, setChallenges] = useState<typeof mockChallenges>([])
   const { user } = useAuth()
+
+  // Имитируем загрузку данных
+  useEffect(() => {
+    const loadChallenges = async () => {
+      setIsLoading(true)
+      setChallenges(mockChallenges)
+      setIsLoading(false)
+    }
+
+    loadChallenges()
+  }, [])
 
   // Filter and sort challenges using useMemo
   const sortedChallenges = useMemo(() => {
+    if (isLoading) return []
+
     // Filter challenges
-    const filtered = mockChallenges.filter(challenge => {
+    const filtered = challenges.filter(challenge => {
       // Filter by category
       if (selectedCategories.length > 0 && !selectedCategories.includes(challenge.category as Category)) {
         return false
@@ -105,7 +120,12 @@ export default function Home() {
           return 0;
       }
     })
-  }, [searchQuery, selectedCategories, selectedStatus, sortConfig, user])
+  }, [searchQuery, selectedCategories, selectedStatus, sortConfig, user, challenges, isLoading])
+
+  // Создаем массив скелетонов для отображения во время загрузки
+  const skeletonCards = Array.from({ length: 9 }, (_, index) => (
+    <ChallengeCardSkeleton key={`skeleton-${index}`} />
+  ))
 
   return (
     <Container
@@ -117,7 +137,7 @@ export default function Home() {
         gap: 3
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/*<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>*/}
         <Filters
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
@@ -129,9 +149,10 @@ export default function Home() {
           setSortConfig={setSortConfig}
           user={user}
         />
-      </Box>
+      {/*</Box>*/}
 
       <Box
+        className='ChalegeList'
         sx={{
           display: 'flex',
           flexWrap: 'wrap',
@@ -151,13 +172,17 @@ export default function Home() {
           }
         }}
       >
-        {sortedChallenges.map(challenge => (
-          <ChallengeCard key={challenge.id} challenge={challenge}/>
-        ))}
+        {isLoading || !sortedChallenges ? (
+          skeletonCards
+        ) : (
+          sortedChallenges.map(challenge => (
+            <ChallengeCard key={challenge.id} challenge={challenge}/>
+          ))
+        )}
       </Box>
 
       {/* Message when no challenges found */}
-      {sortedChallenges.length === 0 && (
+      {!isLoading && sortedChallenges.length === 0 && (
         <Box
           sx={{
             display: 'flex',
@@ -188,7 +213,7 @@ export default function Home() {
       )}
 
       {/* Floating action button */}
-      {user && (
+      {user && !isLoading && (
         <Fab
           color="primary"
           aria-label="add"

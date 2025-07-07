@@ -1,16 +1,51 @@
-import Link from 'next/link'
+import NextLink from 'next/link'
+import { Box, Typography, Button } from '@mui/material'
+import SearchOffIcon from '@mui/icons-material/SearchOff'
 
 export default function NotFound() {
   return (
-    <div className="min-h-[50vh] flex flex-col items-center justify-center">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">Page Not Found</h2>
-      <p className="text-gray-600 mb-8">Could not find requested resource</p>
-      <Link
+    <Box
+      sx={{
+        minHeight: '50vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 3
+      }}
+    >
+      <SearchOffIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+      <Box sx={{ textAlign: 'center' }}>
+        <Typography
+          variant="h4"
+          component="h2"
+          sx={{
+            fontWeight: 700,
+            color: 'text.primary',
+            mb: 1
+          }}
+        >
+          Page Not Found
+        </Typography>
+        <Typography color="text.secondary" sx={{ mb: 3 }}>
+          Could not find requested resource
+        </Typography>
+      </Box>
+      <Button
+        component={NextLink}
         href="/"
-        className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        variant="contained"
+        size="large"
+        sx={{
+          borderRadius: 2,
+          textTransform: 'none',
+          px: 4,
+          py: 1.5,
+          fontSize: '1rem'
+        }}
       >
         Return Home
-      </Link>
-    </div>
+      </Button>
+    </Box>
   )
 } 

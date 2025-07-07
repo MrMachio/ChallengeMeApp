@@ -1,6 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
+import { Box, Typography, Button, CssBaseline } from '@mui/material'
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline'
+import { ThemeProvider } from '@mui/material/styles'
+import getTheme from '@/lib/theme/mui-theme'
 
 export default function GlobalError({
   error,
@@ -13,20 +17,52 @@ export default function GlobalError({
     console.error(error)
   }, [error])
 
+  const theme = getTheme('light')
+
   return (
     <html>
       <body>
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Something went wrong!
-          </h2>
-          <button
-            onClick={() => reset()}
-            className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Box
+            sx={{
+              minHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 3,
+              bgcolor: 'grey.50'
+            }}
           >
-            Try again
-          </button>
-        </div>
+            <ErrorOutlineIcon color="error" sx={{ fontSize: 48 }} />
+            <Typography
+              variant="h4"
+              component="h2"
+              sx={{
+                fontWeight: 700,
+                color: 'text.primary',
+                textAlign: 'center'
+              }}
+            >
+              Something went wrong!
+            </Typography>
+            <Button
+              onClick={() => reset()}
+              variant="contained"
+              size="large"
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                px: 4,
+                py: 1.5,
+                fontSize: '1rem'
+              }}
+            >
+              Try again
+            </Button>
+          </Box>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -7,6 +7,7 @@ interface User {
   completedChallenges: string[];
   createdChallenges: string[];
   activeChallenges: string[];
+  pendingChallenges: string[]; // Challenges waiting for creator approval
   fullName?: string;
   followers?: number;
   following?: number;
@@ -27,6 +28,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['2', '4', '6', '8'],
     createdChallenges: ['1', '7'],
     activeChallenges: ['3', '5', '9'],
+    pendingChallenges: [],
     followers: 120,
     following: 85
   },
@@ -40,6 +42,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['1', '5'],
     createdChallenges: ['2', '6'],
     activeChallenges: ['4'],
+    pendingChallenges: [],
     followers: 75,
     following: 50
   },
@@ -53,6 +56,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['1', '4'],
     createdChallenges: ['3'],
     activeChallenges: ['5', '6'],
+    pendingChallenges: [],
     followers: 250,
     following: 120
   },
@@ -66,6 +70,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['3', '6', '7'],
     createdChallenges: ['4'],
     activeChallenges: ['1', '2'],
+    pendingChallenges: [],
     followers: 95,
     following: 88
   },
@@ -79,6 +84,7 @@ export const mockUsers: UserMap = {
     completedChallenges: [],
     createdChallenges: ['5'],
     activeChallenges: ['2', '6'],
+    pendingChallenges: [],
     followers: 180,
     following: 95
   },
@@ -92,6 +98,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['2', '5', '8'],
     createdChallenges: ['8', '11'],
     activeChallenges: ['7', '9'],
+    pendingChallenges: [],
     followers: 65,
     following: 42
   },
@@ -105,6 +112,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['3', '6', '9'],
     createdChallenges: ['9', '12'],
     activeChallenges: ['8', '10'],
+    pendingChallenges: [],
     followers: 195,
     following: 88
   },
@@ -118,6 +126,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['4', '7', '10'],
     createdChallenges: ['10', '13'],
     activeChallenges: ['9', '11'],
+    pendingChallenges: [],
     followers: 280,
     following: 150
   },
@@ -131,6 +140,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['5', '8', '11'],
     createdChallenges: ['14'],
     activeChallenges: ['10', '12'],
+    pendingChallenges: [],
     followers: 110,
     following: 75
   },
@@ -144,6 +154,7 @@ export const mockUsers: UserMap = {
     completedChallenges: ['6', '9', '12'],
     createdChallenges: ['15'],
     activeChallenges: ['11', '13'],
+    pendingChallenges: [],
     followers: 165,
     following: 92
   }
@@ -450,6 +461,27 @@ export const mockChallenges = [
   likesCount: (mockChallengeLikes[challenge.id] || []).length
 }));
 
+// Function to calculate user points based on completed challenges
+const calculateUserPoints = (userId: string): number => {
+  const user = mockUsers[userId];
+  if (!user) return 0;
+  
+  let totalPoints = 0;
+  user.completedChallenges.forEach(challengeId => {
+    const challenge = mockChallenges.find(c => c.id === challengeId);
+    if (challenge) {
+      totalPoints += challenge.points;
+    }
+  });
+  
+  return totalPoints;
+};
+
+// Update all user points based on their completed challenges
+Object.keys(mockUsers).forEach(userId => {
+  mockUsers[userId].points = calculateUserPoints(userId);
+});
+
 export const mockCategories = [
   { id: '1', name: 'Sports', icon: '🏃‍♂️' },
   { id: '2', name: 'Creative', icon: '🎨' },
@@ -555,11 +587,16 @@ interface Completion {
   userId: string;
   username: string;
   avatarUrl: string;
-  rating: number;
+  rating: number; // Average rating calculated from userRatings
+  userRatings: Record<string, number>; // Individual ratings from each user (userId -> rating)
   likes: number;
   dislikes: number;
   proofUrl: string;
+  proofType: 'image' | 'video'; // Type of proof media
+  description: string; // User's description of how they completed the challenge
+  status: 'pending' | 'approved' | 'rejected'; // Creator's approval status
   completedAt: string;
+  submittedAt: string; // When the proof was submitted
 }
 
 interface CompletionsMap {
@@ -574,9 +611,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user2'].username,
       avatarUrl: mockUsers['user2'].avatarUrl,
       rating: 4.5,
+      userRatings: { 'user1': 5, 'user3': 4, 'user4': 4, 'user5': 5 },
       likes: 12,
       dislikes: 1,
       proofUrl: '/images/proofs/coding-proof1.jpg',
+      proofType: 'image',
+      description: 'Completed 30 days of coding successfully! Here is my GitHub contribution chart showing daily commits for the entire month.',
+      status: 'approved',
+      submittedAt: '2024-02-17T09:00:00Z',
       completedAt: '2024-02-17T10:00:00Z'
     },
     {
@@ -585,9 +627,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user3'].username,
       avatarUrl: mockUsers['user3'].avatarUrl,
       rating: 5,
+      userRatings: { 'user1': 5, 'user2': 5, 'user4': 5, 'user5': 5, 'user6': 5 },
       likes: 45,
       dislikes: 1,
       proofUrl: '/images/proofs/coding-proof2.jpg',
+      proofType: 'image',
+      description: 'Amazing challenge! I built 3 different projects during these 30 days. Here\'s my final portfolio showcase.',
+      status: 'approved',
+      submittedAt: '2024-02-16T13:30:00Z',
       completedAt: '2024-02-16T14:30:00Z'
     }
   ],
@@ -598,9 +645,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user1'].username,
       avatarUrl: mockUsers['user1'].avatarUrl,
       rating: 4,
+      userRatings: { 'user2': 4, 'user3': 4, 'user4': 4, 'user5': 4 },
       likes: 28,
       dislikes: 3,
       proofUrl: '/images/proofs/waste-proof1.jpg',
+      proofType: 'image',
+      description: 'Managed to live zero waste for a full week! This photo shows all my waste for the week - only recyclable materials.',
+      status: 'approved',
+      submittedAt: '2024-02-14T08:15:00Z',
       completedAt: '2024-02-14T09:15:00Z'
     }
   ],
@@ -611,9 +663,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user4'].username,
       avatarUrl: mockUsers['user4'].avatarUrl,
       rating: 5,
+      userRatings: { 'user1': 5, 'user2': 5, 'user3': 5, 'user5': 5, 'user6': 5 },
       likes: 56,
       dislikes: 0,
       proofUrl: '/images/proofs/running-proof1.jpg',
+      proofType: 'image',
+      description: 'Successfully completed my first 5K run! Training was tough but so worth it. This is my finish line photo with my time.',
+      status: 'approved',
+      submittedAt: '2024-02-13T15:45:00Z',
       completedAt: '2024-02-13T16:45:00Z'
     }
   ],
@@ -624,9 +681,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user1'].username,
       avatarUrl: mockUsers['user1'].avatarUrl,
       rating: 4.8,
+      userRatings: { 'user2': 5, 'user3': 5, 'user4': 4, 'user5': 5 },
       likes: 34,
       dislikes: 1,
       proofUrl: '/images/proofs/art-proof1.jpg',
+      proofType: 'image',
+      description: 'Created 7 unique digital artworks! Each piece represents a different day and emotion. Here\'s my complete portfolio.',
+      status: 'approved',
+      submittedAt: '2024-02-15T10:20:00Z',
       completedAt: '2024-02-15T11:20:00Z'
     },
     {
@@ -635,9 +697,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user3'].username,
       avatarUrl: mockUsers['user3'].avatarUrl,
       rating: 4.9,
+      userRatings: { 'user1': 5, 'user2': 5, 'user4': 5, 'user5': 4, 'user6': 5 },
       likes: 41,
       dislikes: 0,
       proofUrl: '/images/proofs/art-proof2.jpg',
+      proofType: 'image',
+      description: 'What an incredible creative journey! Explored different digital art styles each day. My favorite is the abstract piece from day 5.',
+      status: 'approved',
+      submittedAt: '2024-02-16T12:45:00Z',
       completedAt: '2024-02-16T13:45:00Z'
     }
   ],
@@ -648,9 +715,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user2'].username,
       avatarUrl: mockUsers['user2'].avatarUrl,
       rating: 4.7,
+      userRatings: { 'user1': 5, 'user3': 4, 'user4': 5, 'user5': 5, 'user6': 4 },
       likes: 29,
       dislikes: 2,
       proofUrl: '/images/proofs/meditation-proof1.jpg',
+      proofType: 'image',
+      description: 'Meditation has transformed my daily routine! Started with 5 minutes and now I can easily do 20 minutes. This is my peaceful meditation corner.',
+      status: 'approved',
+      submittedAt: '2024-02-18T08:30:00Z',
       completedAt: '2024-02-18T09:30:00Z'
     }
   ],
@@ -661,9 +733,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user1'].username,
       avatarUrl: mockUsers['user1'].avatarUrl,
       rating: 5,
+      userRatings: { 'user2': 5, 'user3': 5, 'user4': 5, 'user5': 5, 'user6': 5, 'user7': 5 },
       likes: 62,
       dislikes: 1,
       proofUrl: '/images/proofs/cleanup-proof1.jpg',
+      proofType: 'image',
+      description: 'Organized a community clean-up event with 25 volunteers! We collected 200+ pounds of trash from the local park. What a great day!',
+      status: 'approved',
+      submittedAt: '2024-02-19T14:20:00Z',
       completedAt: '2024-02-19T15:20:00Z'
     },
     {
@@ -672,9 +749,14 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user4'].username,
       avatarUrl: mockUsers['user4'].avatarUrl,
       rating: 4.9,
+      userRatings: { 'user1': 5, 'user2': 5, 'user3': 5, 'user5': 4, 'user6': 5 },
       likes: 45,
       dislikes: 0,
       proofUrl: '/images/proofs/cleanup-proof2.jpg',
+      proofType: 'image',
+      description: 'Led a beach cleanup initiative! Gathered 30 people to help clean our local beach. The before and after photos are incredible.',
+      status: 'approved',
+      submittedAt: '2024-02-20T09:15:00Z',
       completedAt: '2024-02-20T10:15:00Z'
     }
   ],
@@ -685,10 +767,99 @@ export const mockCompletions: CompletionsMap = {
       username: mockUsers['user4'].username,
       avatarUrl: mockUsers['user4'].avatarUrl,
       rating: 4.8,
+      userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user5': 5, 'user6': 4 },
       likes: 38,
       dislikes: 1,
       proofUrl: '/images/proofs/language-proof1.jpg',
+      proofType: 'image',
+      description: 'Learned Spanish for 30 days straight! This is my language learning app showing 30 days of consistent practice. ¡Hola mundo!',
+      status: 'approved',
+      submittedAt: '2024-02-21T13:40:00Z',
       completedAt: '2024-02-21T14:40:00Z'
     }
+  ],
+  '8': [
+    {
+      id: 'completion11',
+      userId: 'user5',
+      username: mockUsers['user5'].username,
+      avatarUrl: mockUsers['user5'].avatarUrl,
+      rating: 0,
+      userRatings: {},
+      likes: 0,
+      dislikes: 0,
+      proofUrl: '/images/proofs/book-proof1.jpg',
+      proofType: 'image',
+      description: 'Just finished reading my 5th book! Here are all the books I read with my detailed reviews and notes.',
+      status: 'pending',
+      submittedAt: '2024-02-22T16:30:00Z',
+      completedAt: '2024-02-22T16:30:00Z'
+    },
+    {
+      id: 'completion12',
+      userId: 'user9',
+      username: mockUsers['user9'].username,
+      avatarUrl: mockUsers['user9'].avatarUrl,
+      rating: 0,
+      userRatings: {},
+      likes: 0,
+      dislikes: 0,
+      proofUrl: '/images/proofs/book-proof2.jpg',
+      proofType: 'image',
+      description: 'Completed the reading marathon! These 5 books have really expanded my perspective on life and technology.',
+      status: 'rejected',
+      submittedAt: '2024-02-20T11:15:00Z',
+      completedAt: '2024-02-20T11:15:00Z'
+    }
+  ],
+  '9': [
+    {
+      id: 'completion13',
+      userId: 'user7',
+      username: mockUsers['user7'].username,
+      avatarUrl: mockUsers['user7'].avatarUrl,
+      rating: 4.6,
+      userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
+      likes: 31,
+      dislikes: 2,
+      proofUrl: '/images/proofs/fitness-proof1.jpg',
+      proofType: 'image',
+      description: 'Achieved my fitness goals! 30 days of consistent workouts and proper nutrition. This transformation photo shows the incredible results.',
+      status: 'approved',
+      submittedAt: '2024-02-23T07:45:00Z',
+      completedAt: '2024-02-23T08:45:00Z'
+    }
   ]
-}; 
+};
+
+// Helper function to recalculate rating based on userRatings
+export const recalculateRating = (userRatings: Record<string, number>): number => {
+  const ratings = Object.values(userRatings)
+  if (ratings.length === 0) return 0
+  
+  const average = ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+  return Math.round(average * 10) / 10 // Round to 1 decimal place
+}
+
+// Verify rating consistency in mock data
+export const verifyRatingConsistency = () => {
+  let inconsistencies = 0
+  
+  Object.entries(mockCompletions).forEach(([challengeId, completions]) => {
+    completions.forEach(completion => {
+      const calculatedRating = recalculateRating(completion.userRatings)
+      if (Math.abs(completion.rating - calculatedRating) > 0.1) {
+        console.warn(`Rating inconsistency in completion ${completion.id}: stored=${completion.rating}, calculated=${calculatedRating}`)
+        inconsistencies++
+      }
+    })
+  })
+  
+  if (inconsistencies === 0) {
+    console.log('✅ All ratings are consistent with userRatings')
+  } else {
+    console.log(`❌ Found ${inconsistencies} rating inconsistencies`)
+  }
+  
+  return inconsistencies
+} 

@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/providers/AuthProvider'
 import Image from 'next/image'
 import {
   AppBar,
@@ -16,16 +16,15 @@ import {
   Container,
   IconButton,
   Chip,
+  CircularProgress,
 } from '@mui/material'
 import { useState } from 'react'
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents'
-import UserProfileModal from '../UserProfileModal'
 
 export default function Header() {
-  const { user, signOut } = useAuth()
-  const pathname = usePathname()
+  const { user, signOut, loading } = useAuth()
+  const router = useRouter()
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget)
@@ -37,7 +36,18 @@ export default function Header() {
 
   const handleOpenProfile = () => {
     handleCloseMenu()
-    setIsProfileOpen(true)
+    if (user?.username) {
+      router.push(`/profile/${user.username}`)
+    }
+  }
+
+  const handleSignOut = async () => {
+    handleCloseMenu()
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   return (
@@ -64,8 +74,10 @@ export default function Header() {
 
             <Box sx={{ flexGrow: 1 }} />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              {user ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minHeight: 40 }}>
+              {loading ? (
+                <CircularProgress size={24} />
+              ) : user ? (
                 <>
                   <Chip
                     icon={<EmojiEventsIcon />}
@@ -106,7 +118,7 @@ export default function Header() {
                     <MenuItem onClick={handleOpenProfile}>
                       Your Profile
                     </MenuItem>
-                    <MenuItem onClick={() => { handleCloseMenu(); signOut(); }}>
+                    <MenuItem onClick={handleSignOut}>
                       Sign out
                     </MenuItem>
                   </Menu>
@@ -145,12 +157,6 @@ export default function Header() {
         </Container>
       </AppBar>
 
-      {user && (
-        <UserProfileModal
-          open={isProfileOpen}
-          onClose={() => setIsProfileOpen(false)}
-        />
-      )}
     </>
   )
 } 

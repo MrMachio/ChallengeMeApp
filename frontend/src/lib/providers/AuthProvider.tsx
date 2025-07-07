@@ -1,19 +1,40 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
-import { useAuth } from '../hooks/useAuth'
+import { createContext, useContext, ReactNode, useEffect, useState } from 'react'
+import { useAuth as useAuthHook, User } from '../hooks/useAuth'
 
-const AuthContext = createContext<ReturnType<typeof useAuth> | undefined>(undefined)
+// Экспортируем тип User для использования в других компонентах
+export type { User }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const auth = useAuth()
-  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>
+interface AuthContextType {
+  user: User | null
+  loading: boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (email: string, password: string, username: string) => Promise<void>
+  signOut: () => Promise<void>
 }
 
-export function useAuthContext() {
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const auth = useAuthHook()
+  
+  return (
+    <AuthContext.Provider value={auth}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
+}
+
+// Для обратной совместимости
+export function useAuthContext() {
+  return useAuth()
 } 

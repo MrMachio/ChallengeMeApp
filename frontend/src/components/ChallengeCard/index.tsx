@@ -12,6 +12,7 @@ import {
   Chip,
   Stack,
   Avatar,
+  Skeleton,
 } from '@mui/material'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
@@ -21,10 +22,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PersonIcon from '@mui/icons-material/Person'
 import ChallengeModal from '../ChallengeModal'
-import { mockCurrentUser, mockChallengeLikes, mockCompletions } from '@/lib/mock/data'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { mockChallengeLikes, mockCompletions } from '@/lib/mock/data'
+import { useAuth } from '@/lib/providers/AuthProvider'
 
-interface ChallengeCardProps {
+export interface ChallengeCardProps {
   challenge: {
     id: string
     title: string
@@ -45,6 +46,88 @@ interface ChallengeCardProps {
   }
 }
 
+// Компонент скелетона для загрузки
+export function ChallengeCardSkeleton() {
+  return (
+    <Card 
+      sx={{ 
+        height: '100%', 
+        display: 'flex', 
+        flexDirection: 'column',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        bgcolor: 'background.paper',
+      }}
+    >
+      {/* Image skeleton */}
+      <Box sx={{ height: '180px', width: '100%' }}>
+        <Skeleton 
+          variant="rectangular" 
+          width="100%" 
+          height="100%" 
+          animation="wave"
+        />
+      </Box>
+
+      <CardContent sx={{ p: '16px', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
+        {/* Title skeleton */}
+        <Skeleton 
+          variant="text" 
+          width="80%" 
+          height={28} 
+          sx={{ mb: '8px' }}
+          animation="wave"
+        />
+
+        {/* Description skeleton */}
+        <Skeleton 
+          variant="text" 
+          width="100%" 
+          height={20} 
+          sx={{ mb: '4px' }}
+          animation="wave"
+        />
+        <Skeleton 
+          variant="text" 
+          width="60%" 
+          height={20} 
+          sx={{ mb: '16px' }}
+          animation="wave"
+        />
+
+        {/* Footer skeleton */}
+        <Box 
+          sx={{ 
+            mt: 'auto',
+            pt: '12px',
+            borderTop: '1px solid #E5E7EB',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          <Stack direction="row" spacing={2}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Skeleton variant="circular" width={20} height={20} animation="wave" />
+              <Skeleton variant="text" width={20} height={20} animation="wave" />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Skeleton variant="circular" width={20} height={20} animation="wave" />
+              <Skeleton variant="text" width={20} height={20} animation="wave" />
+            </Box>
+          </Stack>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Skeleton variant="circular" width={24} height={24} animation="wave" />
+            <Skeleton variant="text" width={60} height={16} animation="wave" />
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
@@ -52,56 +135,10 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const { user } = useAuth()
 
-  // Определяем статус челленджа для текущего пользователя
-  const getChallengeStatus = () => {
-    if (!user) return null;
-    
-    if (user.completedChallenges.includes(challenge.id.toString())) {
-      return 'completed';
-    }
-    if (user.activeChallenges.includes(challenge.id.toString())) {
-      return 'active';
-    }
-    if (challenge.creatorId === user.id) {
-      return 'created';
-    }
-    return 'available';
-  }
-
-  const status = getChallengeStatus();
-
-  // Получаем цвет и иконку для статуса
-  const getStatusConfig = (status: string | null) => {
-    switch(status) {
-      case 'completed':
-        return {
-          icon: <CheckCircleIcon fontSize="small" />,
-          label: 'Completed',
-          color: 'success' as const
-        };
-      case 'active':
-        return {
-          icon: <PlayArrowIcon fontSize="small" />,
-          label: 'In Progress',
-          color: 'info' as const
-        };
-      case 'created':
-        return {
-          icon: <PersonIcon fontSize="small" />,
-          label: 'Created by You',
-          color: 'secondary' as const
-        };
-      default:
-        return null;
-    }
-  }
-
-  const statusConfig = getStatusConfig(status);
-
   // Обновляем состояние лайков и количество выполнивших
   const updateCounts = () => {
     const likes = mockChallengeLikes[challenge.id] || [];
-    const userLiked = likes.includes(mockCurrentUser.id);
+    const userLiked = user ? likes.includes(user.id) : false;
     setIsLiked(userLiked);
     setLikesCount(likes.length);
 
@@ -116,13 +153,15 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
     
+    if (!user) return;
+    
     // Уменьшаем задержку до 100-200мс
     setTimeout(() => {
       const likes = mockChallengeLikes[challenge.id] || [];
       if (!isLiked) {
-        mockChallengeLikes[challenge.id] = [...likes, mockCurrentUser.id];
+        mockChallengeLikes[challenge.id] = [...likes, user.id];
       } else {
-        mockChallengeLikes[challenge.id] = likes.filter(id => id !== mockCurrentUser.id);
+        mockChallengeLikes[challenge.id] = likes.filter(id => id !== user.id);
       }
       updateCounts(); // Обновляем состояние сразу после изменения
     }, Math.random() * 100 + 100);
@@ -210,22 +249,6 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
             }}
           >
             <Stack direction="row" spacing={0.75}>
-              {statusConfig && (
-                <Chip
-                  icon={statusConfig.icon}
-                  label={statusConfig.label}
-                  size="small"
-                  color={statusConfig.color}
-                  sx={{
-                    bgcolor: 'white',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    height: '26px',
-                    borderRadius: '100px',
-                    px: '10px'
-                  }}
-                />
-              )}
               <Chip
                 label={challenge.category}
                 size="small"

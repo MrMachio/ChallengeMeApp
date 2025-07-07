@@ -5,24 +5,37 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eba9ed74-5057-4fbd-8b95-055895a89712" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/Filters/styledWrappers.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontend/src/components/styledWrappers.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/next.config.mjs" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/next.config.mjs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/api/challenges/[id]/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/challenges/[id]/route.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/next.config.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/api/challenges/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/challenges/route.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/app/api/uploadthing/core.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/uploadthing/core.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/app/challenge/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/challenge/[id]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/globals.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/globals.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/error.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/error.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/global-error.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/global-error.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/globals.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/not-found.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/not-found.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/profile/[username]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/profile/[username]/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CategoryList/styles.css" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeModal/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChallengeModal/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompletedUsersList/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/CompletedUsersList/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/CreateChallengeModal/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/CreateChallengeModal/index.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/Filters/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Filters/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Header/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/UserProfileModal/index.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/api/challenges.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/api/challenges.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/lib/mock/data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/mock/data.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/lib/uploadthing.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/uploadthing.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/uploadthing.tsx" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,6 +93,17 @@
       <option name="filePath" />
       <method v="2" />
     </configuration>
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="ChallengeMeApp" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="ChallengeMeApp" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -103,6 +127,9 @@
       <workItem from="1751574479298" duration="73000" />
       <workItem from="1751612060309" duration="20000" />
       <workItem from="1751633429307" duration="9000" />
+      <workItem from="1751641250426" duration="861000" />
+      <workItem from="1751656402197" duration="619000" />
+      <workItem from="1751829536737" duration="990000" />
     </task>
     <servers />
   </component>

@@ -3,9 +3,30 @@
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { Heart, Users, Trophy, Bookmark } from 'lucide-react'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuth } from '@/lib/providers/AuthProvider'
 import { formatDistanceToNow } from 'date-fns'
+import {
+  Container,
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Chip,
+  IconButton,
+  Avatar,
+  Stack,
+  Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+} from '@mui/material'
+import { styled } from '@mui/material/styles'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import BookmarkIcon from '@mui/icons-material/Bookmark'
+import GroupIcon from '@mui/icons-material/Group'
 
 interface Challenge {
   id: string
@@ -43,9 +64,28 @@ interface Challenge {
   }>
 }
 
+const ImageContainer = styled(Box)({
+  position: 'relative',
+  height: '400px',
+  width: '100%',
+  overflow: 'hidden'
+})
+
+const HeaderChips = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: theme.spacing(2),
+  left: theme.spacing(2),
+  right: theme.spacing(2),
+  display: 'flex',
+  justifyContent: 'space-between',
+  zIndex: 1
+}))
+
 export default function ChallengePage({ params }: { params: { id: string } }) {
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isLiked, setIsLiked] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -68,151 +108,216 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   if (loading) {
-    return <div>Loading...</div>
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Typography>Loading...</Typography>
+      </Box>
+    )
   }
 
   if (!challenge) {
-    return <div>Challenge not found</div>
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Typography>Challenge not found</Typography>
+      </Box>
+    )
   }
 
   const isOwner = user?.id === challenge.creatorId
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-        <div className="relative h-96">
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Paper sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
+        <ImageContainer>
           <Image
             src={challenge.imageUrl || '/images/challenges/default.jpg'}
             alt={challenge.title}
             fill
-            className="object-cover"
+            style={{ objectFit: 'cover' }}
           />
-          <div className="absolute top-4 left-4 flex gap-2">
-            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm">
-              {challenge.category}
-            </span>
-            <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-sm">
-              {challenge.difficulty}
-            </span>
-          </div>
-          <div className="absolute top-4 right-4">
-            <span className="px-3 py-1 bg-orange-400 text-white rounded-full text-sm font-medium">
-              {challenge.points} points
-            </span>
-          </div>
-        </div>
+          <HeaderChips>
+            <Stack direction="row" spacing={1}>
+              <Chip
+                label={challenge.category}
+                sx={{
+                  bgcolor: 'white',
+                  color: 'text.primary',
+                  fontWeight: 500
+                }}
+              />
+              <Chip
+                label={challenge.difficulty}
+                sx={{
+                  bgcolor: 'white',
+                  color: 'text.primary',
+                  fontWeight: 500
+                }}
+              />
+            </Stack>
+            <Chip
+              label={`${challenge.points} points`}
+              sx={{
+                bgcolor: 'warning.main',
+                color: 'white',
+                fontWeight: 500
+              }}
+            />
+          </HeaderChips>
+        </ImageContainer>
 
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-semibold">{challenge.title}</h1>
-            <button className="text-gray-400 hover:text-purple-600">
-              <Bookmark className="w-6 h-6" />
-            </button>
-          </div>
+        <Box sx={{ p: 4 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+              {challenge.title}
+            </Typography>
+            <IconButton onClick={() => setIsBookmarked(!isBookmarked)}>
+              {isBookmarked ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+            </IconButton>
+          </Box>
 
-          <div className="flex items-center gap-6 mb-6">
-            <button className="flex items-center gap-2 text-gray-600 hover:text-red-500">
-              <Heart className="w-5 h-5" />
-              <span>{challenge.likes.length} likes</span>
-            </button>
-            <div className="flex items-center gap-2 text-gray-600">
-              <Users className="w-5 h-5" />
-              <span>{challenge.completions.length} completions</span>
-            </div>
-          </div>
+          <Stack direction="row" spacing={3} sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton 
+                size="small" 
+                onClick={() => setIsLiked(!isLiked)}
+                sx={{ color: isLiked ? 'error.main' : 'inherit' }}
+              >
+                {isLiked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+              </IconButton>
+              <Typography color="text.secondary">
+                {challenge.likes.length} likes
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GroupIcon sx={{ color: 'action.active' }} />
+              <Typography color="text.secondary">
+                {challenge.completions.length} completions
+              </Typography>
+            </Box>
+          </Stack>
 
-          <p className="text-gray-600 mb-6">{challenge.description}</p>
+          <Typography color="text.secondary" sx={{ mb: 3 }}>
+            {challenge.description}
+          </Typography>
 
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-4">Challenge Rules:</h2>
-            <ul className="list-disc list-inside space-y-2 text-gray-600">
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Challenge Rules:
+            </Typography>
+            <List>
               {challenge.rules.map((rule, index) => (
-                <li key={index}>{rule}</li>
+                <ListItem key={index}>
+                  <ListItemText primary={rule} />
+                </ListItem>
               ))}
-            </ul>
-          </div>
+            </List>
+          </Box>
 
-          <div className="flex items-center justify-between">
-            <Link href={`/profile/${challenge.creator.username}`} className="flex items-center gap-3">
-              <Image
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box 
+              component={Link} 
+              href={`/profile/${challenge.creator.username}`}
+              sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 2,
+                textDecoration: 'none',
+                color: 'inherit'
+              }}
+            >
+              <Avatar
                 src={challenge.creator.avatarUrl || '/images/avatars/default.svg'}
                 alt={challenge.creator.username}
-                width={40}
-                height={40}
-                className="rounded-full"
               />
-              <div>
-                <p className="text-sm font-medium">{challenge.creator.username}</p>
-                <p className="text-sm text-gray-500">
+              <Box>
+                <Typography variant="subtitle2">
+                  {challenge.creator.username}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
                   {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}
-                </p>
-              </div>
-            </Link>
+                </Typography>
+              </Box>
+            </Box>
 
-            <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:from-purple-700 hover:to-purple-800">
+            <Button
+              variant="contained"
+              sx={{
+                background: 'linear-gradient(45deg, #9c27b0 30%, #d81b60 90%)',
+                color: 'white',
+                px: 4,
+                py: 1.5,
+                borderRadius: '100px'
+              }}
+            >
               Accept Challenge
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </Box>
+        </Box>
+      </Paper>
 
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold mb-6">Recently Completed:</h2>
-        <div className="space-y-4">
+      <Paper sx={{ p: 4, borderRadius: 4, mb: 4 }}>
+        <Typography variant="h6" sx={{ mb: 3 }}>
+          Recently Completed:
+        </Typography>
+        <List>
           {challenge.completions.map((completion) => (
-            <div key={completion.id} className="flex items-center justify-between">
-              <Link href={`/profile/${completion.user.username}`} className="flex items-center gap-3">
-                <Image
+            <ListItem
+              key={completion.id}
+              secondaryAction={
+                <Button color="primary">View</Button>
+              }
+            >
+              <ListItemAvatar>
+                <Avatar
                   src={completion.user.avatarUrl || '/images/avatars/default.svg'}
                   alt={completion.user.username}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
                 />
-                <div>
-                  <p className="font-medium">{completion.user.username}</p>
-                  <p className="text-sm text-gray-500">
-                    {completion.status === 'approved'
-                      ? 'Completed'
-                      : completion.status === 'rejected'
-                      ? 'Rejected'
-                      : 'Pending'}
-                  </p>
-                </div>
-              </Link>
-              <button className="text-purple-600 hover:text-purple-700">
-                View
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-4">Comments:</h2>
-        <div className="space-y-4">
-          {challenge.comments.map((comment) => (
-            <div key={comment.id} className="flex items-start gap-3">
-              <Image
-                src={comment.user.avatarUrl || '/images/avatars/default.svg'}
-                alt={comment.user.username}
-                width={32}
-                height={32}
-                className="rounded-full"
+              </ListItemAvatar>
+              <ListItemText
+                primary={completion.user.username}
+                secondary={
+                  completion.status === 'approved'
+                    ? 'Completed'
+                    : completion.status === 'rejected'
+                    ? 'Rejected'
+                    : 'Pending'
+                }
               />
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-gray-900">{comment.user.username}</p>
-                  <span className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                  </span>
-                </div>
-                <p className="text-gray-600">{comment.content}</p>
-              </div>
-            </div>
+            </ListItem>
           ))}
-        </div>
-      </div>
-    </div>
+        </List>
+      </Paper>
+
+      <Paper sx={{ p: 4, borderRadius: 4 }}>
+        <Typography variant="h6" sx={{ mb: 3 }}>
+          Comments:
+        </Typography>
+        <List>
+          {challenge.comments.map((comment) => (
+            <ListItem key={comment.id} alignItems="flex-start">
+              <ListItemAvatar>
+                <Avatar
+                  src={comment.user.avatarUrl || '/images/avatars/default.svg'}
+                  alt={comment.user.username}
+                />
+              </ListItemAvatar>
+              <ListItemText
+                primary={
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="subtitle2">
+                      {comment.user.username}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    </Typography>
+                  </Box>
+                }
+                secondary={comment.content}
+              />
+            </ListItem>
+          ))}
+        </List>
+      </Paper>
+    </Container>
   )
 } 

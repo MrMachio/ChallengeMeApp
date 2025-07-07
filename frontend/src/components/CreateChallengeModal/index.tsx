@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useAuth } from '@/lib/providers/AuthProvider'
 import {
   Dialog,
   DialogTitle,
@@ -38,13 +38,37 @@ export default function CreateChallengeModal({
   const [difficulty, setDifficulty] = useState('')
   const [points, setPoints] = useState<number>(100)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
 
+  const handleClose = () => {
+    // Clean up preview URL
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+    }
+    
+    // Reset form
+    setTitle('')
+    setDescription('')
+    setCategory('')
+    setDifficulty('')
+    setPoints(100)
+    setSelectedFile(null)
+    
+    onClose()
+  }
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      setSelectedFile(event.target.files[0])
+      const file = event.target.files[0]
+      setSelectedFile(file)
+      
+      // Create preview URL
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
     }
   }
 
@@ -76,7 +100,8 @@ export default function CreateChallengeModal({
       }, user.id)
 
       router.refresh() // Обновляем список заданий на главной странице
-      onClose()
+      
+      handleClose()
     } catch (error) {
       console.error('Error creating challenge:', error)
     } finally {
@@ -87,20 +112,44 @@ export default function CreateChallengeModal({
   return (
     <Dialog
       open={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       maxWidth="sm"
       fullWidth
       PaperProps={{
         sx: {
           borderRadius: 2,
-          p: 2
+          p: 2,
+          width: '600px',
+          height: '900px',
+          maxWidth: '600px',
+          maxHeight: '900px',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
     >
       <DialogTitle sx={{ px: 0 }}>
         Create New Challenge
       </DialogTitle>
-      <DialogContent sx={{ px: 0 }}>
+      <DialogContent sx={{ 
+        px: 0, 
+        flex: 1, 
+        overflow: 'auto',
+        '&::-webkit-scrollbar': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-track': {
+          background: '#f1f1f1',
+          borderRadius: '3px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          background: '#c1c1c1',
+          borderRadius: '3px',
+        },
+        '&::-webkit-scrollbar-thumb:hover': {
+          background: '#a8a8a8',
+        },
+      }}>
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           <Stack spacing={3}>
             <TextField
@@ -187,15 +236,37 @@ export default function CreateChallengeModal({
                 </Button>
               </label>
               {selectedFile && (
-                <Typography variant="body2" color="textSecondary">
+                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                   Selected file: {selectedFile.name}
                 </Typography>
+              )}
+              {previewUrl && (
+                <Box
+                  sx={{
+                    width: '100%',
+                    height: 200,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    border: '1px solid #e0e0e0',
+                    position: 'relative'
+                  }}
+                >
+                  <img
+                    src={previewUrl}
+                    alt="Challenge preview"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                </Box>
               )}
             </Box>
             
             <Stack direction="row" spacing={2} justifyContent="flex-end">
               <Button
-                onClick={onClose}
+                onClick={handleClose}
                 variant="outlined"
                 color="inherit"
                 disabled={isLoading}

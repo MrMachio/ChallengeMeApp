@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import keycloak from '@/lib/keycloak'
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +8,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // TODO: Replace with real database integration
     // Code for fetching challenges from the database should be here
     // Example stub:
     return NextResponse.json([
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
 
     const data = await request.json()
 
+    // TODO: Replace with real database integration
     // Code for saving the challenge to the database should be here
     // Example stub:
     const challenge = {
