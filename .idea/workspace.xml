@@ -5,37 +5,25 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eba9ed74-5057-4fbd-8b95-055895a89712" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/next.config.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/api/challenges/route.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/challenges/route.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/api/uploadthing/core.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/api/uploadthing/core.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/challenge/[id]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/challenge/[id]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/error.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/error.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/global-error.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/global-error.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/globals.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/not-found.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/not-found.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/profile/[username]/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/profile/[username]/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/CategoryList/styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeCard/styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/ChallengeModal/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/ChallengeModal/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/CompletedUsersList/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/CompletedUsersList/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/CreateChallengeModal/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/CreateChallengeModal/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Filters/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Filters/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/Header/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/Header/styles.css" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/UserProfileModal/index.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/api/challenges.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/api/challenges.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/mock/data.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/mock/data.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/uploadthing.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/uploadthing.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/lib/uploadthing.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/app-build-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/app-build-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/build-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/build-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app-paths-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/app-paths-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/_not-found/page.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/_not-found/page_client-reference-manifest.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/page_client-reference-manifest.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/middleware-build-manifest.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/middleware-build-manifest.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/middleware-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/middleware-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/server/server-reference-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/server-reference-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/.next/trace" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/trace" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/ThemeRegistry.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/AddFriendModal.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/LoginModal.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/NavBar.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/ProfileModal.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/SignUpModal.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/theme.ts" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +33,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="clean-frontend" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -129,7 +117,7 @@
       <workItem from="1751633429307" duration="9000" />
       <workItem from="1751641250426" duration="861000" />
       <workItem from="1751656402197" duration="619000" />
-      <workItem from="1751829536737" duration="990000" />
+      <workItem from="1751829536737" duration="7570000" />
     </task>
     <servers />
   </component>
@@ -146,7 +134,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/main" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>

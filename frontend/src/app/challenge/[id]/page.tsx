@@ -170,9 +170,9 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
             <Typography variant="h4" component="h1" sx={{ fontWeight: 600 }}>
               {challenge.title}
             </Typography>
-            <IconButton onClick={() => setIsBookmarked(!isBookmarked)}>
-              {isBookmarked ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
-            </IconButton>
+                          <IconButton onClick={() => setIsBookmarked(!isBookmarked)}>
+                {isBookmarked ? <BookmarkIcon sx={{ color: '#FFD700' }} /> : <BookmarkBorderIcon />}
+              </IconButton>
           </Box>
 
           <Stack direction="row" spacing={3} sx={{ mb: 3 }}>
@@ -231,7 +231,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
               />
               <Box>
                 <Typography variant="subtitle2">
-                  {challenge.creator.username}
+                  {user?.id === challenge.creatorId ? 'you' : challenge.creator.username}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}

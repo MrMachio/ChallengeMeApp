@@ -1,20 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { 
   Box, 
   Typography, 
   Rating, 
-  IconButton, 
   Avatar, 
   Button, 
   Chip, 
   Card,
   CardContent,
   CardMedia,
-  Divider,
   Stack,
   Dialog,
   DialogTitle,
@@ -22,8 +20,6 @@ import {
   DialogActions
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
-import ThumbUpIcon from '@mui/icons-material/ThumbUp'
-import ThumbDownIcon from '@mui/icons-material/ThumbDown'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import CancelIcon from '@mui/icons-material/Cancel'
 import PendingIcon from '@mui/icons-material/Pending'
@@ -33,7 +29,9 @@ import { recalculateRating } from '@/lib/mock/data'
 import { useAuth } from '@/lib/hooks/useAuth'
 
 const CompletionCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(3),
+  minWidth: '320px',
+  maxWidth: '320px',
+  height: '400px',
   borderRadius: theme.spacing(2),
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
   overflow: 'hidden',
@@ -47,7 +45,7 @@ const CompletionCard = styled(Card)(({ theme }) => ({
 const MediaContainer = styled(Box)({
   position: 'relative',
   width: '100%',
-  height: '300px',
+  height: '180px',
   backgroundColor: '#f5f5f5',
   display: 'flex',
   alignItems: 'center',
@@ -57,8 +55,8 @@ const MediaContainer = styled(Box)({
 
 const StatusChip = styled(Chip)<{ status: 'pending' | 'approved' | 'rejected' }>(({ theme, status }) => ({
   position: 'absolute',
-  top: theme.spacing(1),
-  right: theme.spacing(1),
+  top: theme.spacing(0.5),
+  right: theme.spacing(0.5),
   zIndex: 1,
   backgroundColor: 
     status === 'approved' ? theme.palette.success.main :
@@ -66,16 +64,45 @@ const StatusChip = styled(Chip)<{ status: 'pending' | 'approved' | 'rejected' }>
     theme.palette.warning.main,
   color: 'white',
   fontWeight: 600,
+  height: '20px',
+  fontSize: '10px',
   '& .MuiChip-icon': {
-    color: 'white'
+    color: 'white',
+    fontSize: '14px'
   }
 }))
 
 const CreatorActions = styled(Box)(({ theme }) => ({
   display: 'flex',
-  gap: theme.spacing(1),
-  marginTop: theme.spacing(2)
+  gap: theme.spacing(0.5),
+  marginTop: theme.spacing(1)
 }))
+
+const ScrollContainer = styled(Box)({
+  display: 'flex',
+  gap: '16px',
+  overflowX: 'auto',
+  overflowY: 'hidden',
+  paddingBottom: '8px',
+  cursor: 'grab',
+  '&:active': {
+    cursor: 'grabbing',
+  },
+  '&::-webkit-scrollbar': {
+    height: '6px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: '#f1f1f1',
+    borderRadius: '3px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: '#c1c1c1',
+    borderRadius: '3px',
+  },
+  '&::-webkit-scrollbar-thumb:hover': {
+    background: '#a8a8a8',
+  },
+})
 
 interface CompletedUser {
   id: string
@@ -109,9 +136,7 @@ export default function CompletedUsersList({
   challengeCreatorId, 
   onApprove, 
   onReject, 
-  onRate, 
-  onLike, 
-  onDislike 
+  onRate
 }: CompletedUsersListProps) {
   const [selectedMedia, setSelectedMedia] = useState<string | null>(null)
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image')
@@ -121,6 +146,31 @@ export default function CompletedUsersList({
   const { user: currentUser } = useAuth()
 
   const isCreator = currentUser?.id === challengeCreatorId
+  
+  // Drag to scroll functionality
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return
+    setIsDragging(true)
+    setStartX(e.pageX - scrollRef.current.offsetLeft)
+    setScrollLeft(scrollRef.current.scrollLeft)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - scrollRef.current.offsetLeft
+    const walk = (x - startX) * 2
+    scrollRef.current.scrollLeft = scrollLeft - walk
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
 
   const handleMediaClick = (url: string, type: 'image' | 'video') => {
     setSelectedMedia(url)
@@ -172,7 +222,7 @@ export default function CompletedUsersList({
       case 'rejected':
         return 'Rejected'
       case 'pending':
-        return 'Pending Review'
+        return 'Pending'
     }
   }
 
@@ -188,156 +238,172 @@ export default function CompletedUsersList({
 
   return (
     <Box>
-      {users.map((user) => {
-        // Use local rating if available, otherwise use original
-        const localRating = localRatings[user.id]
-        const displayRating = localRating ? localRating.averageRating : user.rating
-        const displayUserRatings = localRating ? localRating.userRatings : user.userRatings
-        
-        return (
-        <CompletionCard key={user.id}>
-          <Box sx={{ position: 'relative' }}>
-            <StatusChip
-              status={user.status}
-              icon={getStatusIcon(user.status)}
-              label={getStatusText(user.status)}
-              size="small"
-            />
-            <MediaContainer onClick={() => handleMediaClick(user.proofUrl, user.proofType)}>
-              {user.proofType === 'image' ? (
-                <Image
-                  src={user.proofUrl}
-                  alt={`${user.username}'s proof`}
-                  fill
-                  style={{ objectFit: 'cover' }}
-                />
-              ) : (
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  gap: 1
-                }}>
-                  <PlayArrowIcon sx={{ fontSize: 60, color: 'rgba(0,0,0,0.6)' }} />
-                  <Typography variant="body2" color="text.secondary">
-                    Click to play video
-                  </Typography>
-                </Box>
-              )}
-            </MediaContainer>
-          </Box>
+      <ScrollContainer 
+        ref={scrollRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        sx={{
+          userSelect: isDragging ? 'none' : 'auto',
+          cursor: isDragging ? 'grabbing' : 'grab',
+        }}
+      >
+        {users.map((user) => {
+          // Use local rating if available, otherwise use original
+          const localRating = localRatings[user.id]
+          const displayRating = localRating ? localRating.averageRating : user.rating
+          const displayUserRatings = localRating ? localRating.userRatings : user.userRatings
           
-          <CardContent>
-            {/* User Info */}
-            <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-              <Avatar
-                src={user.avatarUrl || '/images/avatars/default.svg'}
-                alt={user.username}
-                sx={{ width: 48, height: 48 }}
-              />
-              <Box sx={{ flexGrow: 1 }}>
-                <Link href={`/profile/${user.username}`} style={{ textDecoration: 'none' }}>
-                  <Typography variant="h6" color="text.primary" sx={{ fontWeight: 600 }}>
-                    {user.username}
-                  </Typography>
-                </Link>
-                <Typography variant="body2" color="text.secondary">
-                  Submitted {formatDistanceToNow(new Date(user.submittedAt), { addSuffix: true })}
-                </Typography>
-              </Box>
-            </Stack>
-
-            {/* Description */}
-            <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.6 }}>
-              {user.description}
-            </Typography>
-
-            <Divider sx={{ my: 2 }} />
-
-            {/* Rating and Actions */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
-                          {/* Community Rating - Only show if user is not the author */}
-            {user.status === 'approved' && currentUser && user.userId !== currentUser.id && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Rate this completion:
-                </Typography>
-                <Rating
-                  value={displayUserRatings[currentUser.id] || 0}
-                  onChange={(_, value) => handleRating(user.id, value || 0)}
+          return (
+            <CompletionCard key={user.id}>
+              <Box sx={{ position: 'relative' }}>
+                <StatusChip
+                  status={user.status}
+                  icon={getStatusIcon(user.status)}
+                  label={getStatusText(user.status)}
                   size="small"
                 />
+                <MediaContainer onClick={() => handleMediaClick(user.proofUrl, user.proofType)}>
+                  {user.proofType === 'image' ? (
+                    <Image
+                      src={user.proofUrl}
+                      alt={`${user.username}'s proof`}
+                      fill
+                      style={{ objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      flexDirection: 'column',
+                      gap: 0.5
+                    }}>
+                      <PlayArrowIcon sx={{ fontSize: 40, color: 'rgba(0,0,0,0.6)' }} />
+                      <Typography variant="caption" color="text.secondary">
+                        Video
+                      </Typography>
+                    </Box>
+                  )}
+                </MediaContainer>
               </Box>
-            )}
+              
+              <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                {/* User Info */}
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+                  <Avatar
+                    src={user.avatarUrl || '/images/avatars/default.svg'}
+                    alt={user.username}
+                    sx={{ width: 32, height: 32 }}
+                  />
+                  <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                    <Link href={`/profile/${user.username}`} style={{ textDecoration: 'none' }}>
+                      <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600, fontSize: '14px' }} noWrap>
+                        {user.username}
+                      </Typography>
+                    </Link>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '12px' }} noWrap>
+                      {user.rating.toFixed(1)} ⭐
+                    </Typography>
+                  </Box>
+                </Stack>
 
-              {/* Current Rating */}
-              {user.status === 'approved' && displayRating > 0 && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Average:
-                  </Typography>
-                  <Rating value={displayRating} readOnly size="small" />
-                  <Typography variant="body2" color="text.secondary">
-                    ({displayRating.toFixed(1)} from {Object.keys(displayUserRatings).length} votes)
+                {/* Description */}
+                <Box sx={{ 
+                  mb: 1.5, 
+                  height: '80px', 
+                  overflowY: 'auto',
+                  '&::-webkit-scrollbar': {
+                    width: '4px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: '#f1f1f1',
+                    borderRadius: '2px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: '#c1c1c1',
+                    borderRadius: '2px',
+                  }
+                }}>
+                  <Typography variant="body2" sx={{ fontSize: '13px', lineHeight: 1.4, color: 'text.secondary' }}>
+                    {user.description}
                   </Typography>
                 </Box>
-              )}
 
-              {/* Like/Dislike */}
-              {user.status === 'approved' && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => onLike?.(user.id)}
-                    color="primary"
-                  >
-                    <ThumbUpIcon />
-                  </IconButton>
-                  <Typography variant="body2" color="text.secondary">
-                    {user.likes}
-                  </Typography>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => onDislike?.(user.id)}
-                    color="secondary"
-                  >
-                    <ThumbDownIcon />
-                  </IconButton>
-                  <Typography variant="body2" color="text.secondary">
-                    {user.dislikes}
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
+                {/* Community Rating - Only show if user is not the author */}
+                {user.status === 'approved' && currentUser && user.userId !== currentUser.id && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px', fontWeight: 500 }}>
+                      Rate:
+                    </Typography>
+                    <Rating
+                      value={displayUserRatings[currentUser.id] || 0}
+                      onChange={(_, value) => handleRating(user.id, value || 0)}
+                      size="large"
+                      sx={{ 
+                        fontSize: '24px',
+                        '& .MuiRating-iconFilled': {
+                          color: '#FFD700',
+                        },
+                        '& .MuiRating-iconEmpty': {
+                          color: '#E0E0E0',
+                        }
+                      }}
+                    />
+                  </Box>
+                )}
 
-            {/* Creator Actions */}
-            {isCreator && user.status === 'pending' && (
-              <CreatorActions>
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<CheckCircleIcon />}
-                  onClick={() => onApprove?.(user.id)}
-                  size="small"
-                >
-                  Approve
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
-                  startIcon={<CancelIcon />}
-                  onClick={() => onReject?.(user.id)}
-                  size="small"
-                >
-                  Reject
-                </Button>
-              </CreatorActions>
-            )}
-          </CardContent>
-        </CompletionCard>
-        )
-      })}
+                {/* Creator Actions */}
+                {isCreator && user.status === 'pending' && (
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      onClick={() => onApprove?.(user.id)}
+                      fullWidth
+                      sx={{ 
+                        fontSize: '12px', 
+                        px: 2, 
+                        py: 1, 
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        background: '#4CAF50',
+                        '&:hover': {
+                          background: '#45a049',
+                        }
+                      }}
+                    >
+                      Approve Challenge
+                    </Button>
+                    <Button
+                      variant="contained"
+                      color="error"
+                      onClick={() => onReject?.(user.id)}
+                      fullWidth
+                      sx={{ 
+                        fontSize: '12px', 
+                        px: 2, 
+                        py: 1, 
+                        fontWeight: 600,
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                        background: '#f44336',
+                        '&:hover': {
+                          background: '#d32f2f',
+                        }
+                      }}
+                    >
+                      Reject Challenge
+                    </Button>
+                  </Box>
+                )}
+              </CardContent>
+            </CompletionCard>
+          )
+        })}
+      </ScrollContainer>
 
       {/* Media Preview Dialog */}
       <Dialog

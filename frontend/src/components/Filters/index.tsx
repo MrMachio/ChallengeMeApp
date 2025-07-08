@@ -11,18 +11,19 @@ import {
   Box,
   Tooltip,
   Chip,
-  OutlinedInput
+  OutlinedInput,
+  Button
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import CloseIcon from '@mui/icons-material/Close'
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward'
+import RestartAltIcon from '@mui/icons-material/RestartAlt'
 import InputAdornment from '@mui/material/InputAdornment'
 import {TextFieldStyled} from "./styledWrappers";
 import {Category, SortConfig, SortField, SortDirection, ChallengeStatus} from "@/app/page";
 import { keyframes } from '@mui/system';
 import { User } from '@/lib/providers/AuthProvider';
 
-// Определяем анимации для стрелки
 const rotateUp = keyframes`
   from {
     transform: rotate(180deg);
@@ -54,15 +55,17 @@ interface FiltersProps {
 }
 
 const CATEGORIES: Category[] = [
+  "All Categories",
   "Educational",
   "Environmental",
   "Sports",
   "Creative",
   "Social",
-  "Other"
+  "Other",
+  "Favorites"
 ];
 
-const STATUS_OPTIONS: { value: ChallengeStatus; label: string }[] = [
+const STATUS_OPTIONS: { value: ChallengeStatus; label: 'All Challenges' | 'Completed' | 'In Progress' | 'Created by Me' | 'Available' }[] = [
   { value: 'all', label: 'All Challenges' },
   { value: 'completed', label: 'Completed' },
   { value: 'active', label: 'In Progress' },
@@ -88,7 +91,28 @@ export default function Filters({
 
   const handleCategoryChange = (event: SelectChangeEvent<Category[]>) => {
     const value = event.target.value as Category[];
-    setSelectedCategories(typeof value === 'string' ? [value] : value);
+    const newCategories = typeof value === 'string' ? [value] : value;
+    
+    // If "All Categories" is selected with other categories, remove "All Categories"
+    if (newCategories.includes('All Categories') && newCategories.length > 1) {
+      const filteredCategories = newCategories.filter(cat => cat !== 'All Categories');
+      setSelectedCategories(filteredCategories);
+    }
+    // If no categories selected, set "All Categories" as default
+    else if (newCategories.length === 0) {
+      setSelectedCategories(['All Categories']);
+    }
+    // If other category is selected when "All Categories" is the only one, replace it
+    else if (selectedCategories.includes('All Categories') && selectedCategories.length === 1 && !newCategories.includes('All Categories')) {
+      setSelectedCategories(newCategories);
+    }
+    else {
+      setSelectedCategories(newCategories);
+    }
+  }
+
+  const handleResetCategories = () => {
+    setSelectedCategories(['All Categories']);
   }
 
   const handleStatusChange = (event: SelectChangeEvent<ChallengeStatus>) => {
@@ -204,39 +228,97 @@ export default function Filters({
           </FormControl>
         )}
 
-        <FormControl
-          sx={{
-            minWidth: { xs: '100%', sm: 200 }
-          }}
-        >
-          <InputLabel>Categories</InputLabel>
-          <Select
-            multiple
-            value={selectedCategories}
-            onChange={handleCategoryChange}
-            input={<OutlinedInput label="Categories" />}
-            renderValue={(selected) => (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                {selected.map((value) => (
-                  <Chip key={value} label={value} size="small" />
-                ))}
-              </Box>
-            )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <FormControl
             sx={{
-              borderRadius: '100px',
-              backgroundColor: 'background.paper',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderRadius: '100px',
-              }
+              minWidth: { xs: '100%', sm: 200 }
             }}
           >
-            {CATEGORIES.map((category) => (
-              <MenuItem key={category} value={category}>
-                {category}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            <InputLabel>Categories</InputLabel>
+            <Select
+              multiple
+              value={selectedCategories}
+              onChange={handleCategoryChange}
+              input={<OutlinedInput label="Categories" />}
+              renderValue={(selected) => {
+                // If only "All Categories" is selected, show it as plain text like status filter
+                if (selected.length === 1 && selected[0] === 'All Categories') {
+                  return (
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      fontSize: '16px',
+                      color: 'text.primary'
+                    }}>
+                      All Categories
+                    </Box>
+                  );
+                }
+                
+                const maxVisible = 2; // Maximum number of chips to show before ellipsis
+                const visibleItems = selected.slice(0, maxVisible);
+                const remainingCount = selected.length - maxVisible;
+                
+                return (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: 0.5, 
+                    overflow: 'hidden',
+                    alignItems: 'center'
+                  }}>
+                    {visibleItems.map((value) => (
+                      <Chip 
+                        key={value} 
+                        label={value} 
+                        size="small"
+                        color={value === 'Favorites' ? 'secondary' : 'default'}
+                      />
+                    ))}
+                    {remainingCount > 0 && (
+                      <Box sx={{ 
+                        fontSize: '14px', 
+                        color: 'text.secondary',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        +{remainingCount} more
+                      </Box>
+                    )}
+                  </Box>
+                );
+              }}
+              sx={{
+                borderRadius: '100px',
+                backgroundColor: 'background.paper',
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderRadius: '100px',
+                }
+              }}
+            >
+              {CATEGORIES.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          {!selectedCategories.includes('All Categories') && (
+            <Tooltip title="Reset to All Categories">
+              <IconButton
+                onClick={handleResetCategories}
+                sx={{
+                  '&:hover': { 
+                    bgcolor: 'rgba(0, 0, 0, 0.04)',
+                    transform: 'rotate(180deg)',
+                    transition: 'transform 0.3s ease'
+                  }
+                }}
+              >
+                <RestartAltIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+        </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <FormControl

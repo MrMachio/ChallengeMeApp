@@ -86,7 +86,63 @@ export default function Header() {
               </Box>
             </Box>
 
-            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 3 }}>
+                <Button
+                  component={Link}
+                  href="/"
+                  sx={{
+                    color: 'text.primary',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  Challenges
+                </Button>
+                <Button
+                  component={Link}
+                  href="/users"
+                  sx={{
+                    color: 'text.primary',
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  Users
+                </Button>
+                {user && (
+                  <Button
+                    component={Link}
+                    href={`/profile/${user.username}`}
+                    sx={{
+                      color: 'text.primary',
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      px: 2,
+                      py: 1,
+                      borderRadius: 2,
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      },
+                    }}
+                  >
+                    My Profile
+                  </Button>
+                )}
+              </Box>
+            </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minHeight: 40 }}>
               {loading ? (

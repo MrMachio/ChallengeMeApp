@@ -7,7 +7,7 @@ interface UseChallengeStatusReturn {
   error: string | null;
   updateStatus: (
     action: 'accept' | 'submit_proof' | 'approve' | 'reject',
-    proofData?: { proofUrl?: string; description?: string }
+    proofData?: { proofUrl?: string; description?: string; proofType?: 'image' | 'video' }
   ) => Promise<void>;
   refetch: () => Promise<void>;
 }
@@ -43,7 +43,7 @@ export function useChallengeStatus(challengeId: string): UseChallengeStatusRetur
   // Функция для обновления статуса задания
   const updateStatus = useCallback(async (
     action: 'accept' | 'submit_proof' | 'approve' | 'reject',
-    proofData?: { proofUrl?: string; description?: string }
+    proofData?: { proofUrl?: string; description?: string; proofType?: 'image' | 'video' }
   ) => {
     if (!challengeId) return;
     
@@ -70,17 +70,14 @@ export function useChallengeStatus(challengeId: string): UseChallengeStatusRetur
     }
   }, [challengeId, fetchStatus]);
 
-  // Функция для принудительного обновления статуса
   const refetch = useCallback(async () => {
     await fetchStatus();
   }, [fetchStatus]);
 
-  // Загрузка статуса при монтировании компонента
   useEffect(() => {
     fetchStatus();
   }, [fetchStatus]);
 
-  // Слушаем глобальные обновления пользователя
   useEffect(() => {
     const handleUserUpdate = () => {
       fetchStatus();

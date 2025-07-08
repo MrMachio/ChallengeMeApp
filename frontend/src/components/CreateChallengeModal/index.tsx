@@ -5,27 +5,152 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/providers/AuthProvider'
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Button,
   Box,
   Stack,
-  IconButton,
   Typography,
+  Chip,
+  Paper,
+  Alert,
 } from '@mui/material'
+import { styled } from '@mui/material/styles'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import CameraAltIcon from '@mui/icons-material/CameraAlt'
+import SchoolIcon from '@mui/icons-material/School'
+import NatureIcon from '@mui/icons-material/Nature'
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
+import PaletteIcon from '@mui/icons-material/Palette'
+import GroupIcon from '@mui/icons-material/Group'
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
 import { challengesApi } from '@/lib/api/challenges'
 import { imagesApi } from '@/lib/api/images'
 import { mockCategories } from '@/lib/mock/data'
 
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    maxWidth: '600px',
+    width: '600px',
+    height: '800px',
+    maxHeight: '800px',
+    margin: 0,
+    borderRadius: '16px',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  '& .MuiBackdrop-root': {
+    backdropFilter: 'blur(5px)'
+  }
+}))
+
+const ImageUploadArea = styled(Paper)(({ theme }) => ({
+  width: '100%',
+  height: '180px',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: '#f8f9fa',
+  border: '2px dashed #dee2e6',
+  borderRadius: theme.spacing(2),
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    backgroundColor: '#e9ecef',
+    borderColor: '#adb5bd'
+  }
+}))
+
+const CategoryChip = styled(Chip)<{ selected: boolean }>(({ theme, selected }) => ({
+  borderRadius: theme.spacing(3),
+  padding: theme.spacing(0.5, 1),
+  height: 'auto',
+  fontWeight: 500,
+  backgroundColor: selected ? theme.palette.primary.main : '#f8f9fa',
+  color: selected ? 'white' : theme.palette.text.primary,
+  border: selected ? 'none' : '1px solid #dee2e6',
+  '&:hover': {
+    backgroundColor: selected ? theme.palette.primary.dark : '#e9ecef',
+  }
+}))
+
+const DifficultyChip = styled(Chip)<{ selected: boolean; difficulty: string }>(({ theme, selected, difficulty }) => {
+  let bgColor = '#f8f9fa';
+  let hoverColor = '#e9ecef';
+  let borderColor = '#dee2e6';
+  
+  if (selected) {
+    switch (difficulty) {
+      case 'Easy':
+        bgColor = '#d4edda';
+        hoverColor = '#c3e6cb';
+        break;
+      case 'Medium':
+        bgColor = '#fff3cd';
+        hoverColor = '#ffeaa7';
+        break;
+      case 'Hard':
+        bgColor = '#f8d7da';
+        hoverColor = '#f5c6cb';
+        break;
+    }
+    borderColor = 'transparent';
+  }
+  
+  return {
+    borderRadius: theme.spacing(3),
+    padding: theme.spacing(0.5, 1),
+    height: 'auto',
+    fontWeight: 500,
+    backgroundColor: bgColor,
+    color: theme.palette.text.primary,
+    border: `1px solid ${borderColor}`,
+    '&:hover': {
+      backgroundColor: hoverColor,
+    }
+  };
+})
+
 interface CreateChallengeModalProps {
   isOpen: boolean
   onClose: () => void
+}
+
+const categories = mockCategories
+const difficulties = ['Easy', 'Medium', 'Hard']
+
+const renderCategoryIcon = (iconName: string) => {
+  switch (iconName) {
+    case 'SchoolIcon':
+      return <SchoolIcon />
+    case 'NatureIcon':
+      return <NatureIcon />
+    case 'FitnessCenterIcon':
+      return <FitnessCenterIcon />
+    case 'PaletteIcon':
+      return <PaletteIcon />
+    case 'GroupIcon':
+      return <GroupIcon />
+    case 'MoreHorizIcon':
+      return <MoreHorizIcon />
+    default:
+      return <MoreHorizIcon />
+  }
+}
+
+const getPointsRange = (difficulty: string) => {
+  switch (difficulty) {
+    case 'Easy':
+      return { min: 50, max: 200, recommended: '50-200' }
+    case 'Medium':
+      return { min: 200, max: 600, recommended: '200-600' }
+    case 'Hard':
+      return { min: 600, max: 1000, recommended: '600-1000' }
+    default:
+      return { min: 50, max: 500, recommended: '50-500' }
+  }
 }
 
 export default function CreateChallengeModal({
@@ -42,6 +167,8 @@ export default function CreateChallengeModal({
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  const pointsRange = getPointsRange(difficulty)
 
   const handleClose = () => {
     // Clean up preview URL
@@ -80,6 +207,10 @@ export default function CreateChallengeModal({
       return
     }
 
+    if (!title || !description || !category || !difficulty) {
+      return
+    }
+
     try {
       setIsLoading(true)
 
@@ -110,29 +241,14 @@ export default function CreateChallengeModal({
   }
 
   return (
-    <Dialog
+    <StyledDialog
       open={isOpen}
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          p: 2,
-          width: '600px',
-          height: '900px',
-          maxWidth: '600px',
-          maxHeight: '900px',
-          display: 'flex',
-          flexDirection: 'column',
-        }
-      }}
     >
-      <DialogTitle sx={{ px: 0 }}>
-        Create New Challenge
-      </DialogTitle>
       <DialogContent sx={{ 
-        px: 0, 
+        p: 3, 
         flex: 1, 
         overflow: 'auto',
         '&::-webkit-scrollbar': {
@@ -150,141 +266,249 @@ export default function CreateChallengeModal({
           background: '#a8a8a8',
         },
       }}>
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <Box component="form" onSubmit={handleSubmit}>
           <Stack spacing={3}>
-            <TextField
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              fullWidth
-              required
-              variant="outlined"
-            />
-            
-            <TextField
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              required
-              multiline
-              rows={4}
-              variant="outlined"
-            />
-            
-            <FormControl fullWidth required>
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                label="Category"
-              >
-                <MenuItem value="">
-                  <em>Select category</em>
-                </MenuItem>
-                {mockCategories.map(cat => (
-                  <MenuItem key={cat.id} value={cat.name}>
-                    {cat.icon} {cat.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            
-            <FormControl fullWidth required>
-              <InputLabel>Difficulty</InputLabel>
-              <Select
-                value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value)}
-                label="Difficulty"
-              >
-                <MenuItem value="">
-                  <em>Select difficulty</em>
-                </MenuItem>
-                <MenuItem value="Easy">Easy</MenuItem>
-                <MenuItem value="Medium">Medium</MenuItem>
-                <MenuItem value="Hard">Hard</MenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Points"
-              type="number"
-              value={points}
-              onChange={(e) => setPoints(Math.max(0, parseInt(e.target.value) || 0))}
-              fullWidth
-              required
-              variant="outlined"
-              inputProps={{ min: 0 }}
-            />
-            
+            {/* Challenge Image */}
             <Box>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Challenge Image
+              </Typography>
               <input
                 accept="image/*"
                 style={{ display: 'none' }}
-                id="challenge-image"
+                id="challenge-image-upload"
                 type="file"
                 onChange={handleFileSelect}
               />
-              <label htmlFor="challenge-image">
-                <Button
-                  component="span"
-                  variant="outlined"
-                  startIcon={<CloudUploadIcon />}
-                  sx={{ mb: 1 }}
-                >
-                  Upload Image
-                </Button>
+              <label htmlFor="challenge-image-upload">
+                <ImageUploadArea>
+                  {previewUrl ? (
+                    <Box
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        position: 'relative',
+                        borderRadius: 2,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <img
+                        src={previewUrl}
+                        alt="Challenge preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    </Box>
+                  ) : (
+                    <>
+                      <CameraAltIcon sx={{ fontSize: 40, color: '#6c757d', mb: 1 }} />
+                      <Typography variant="body2" color="text.secondary">
+                        Upload an image for your challenge
+                      </Typography>
+                      <Button
+                        component="span"
+                        variant="outlined"
+                        size="small"
+                        sx={{ mt: 1, borderRadius: 2 }}
+                      >
+                        Choose File
+                      </Button>
+                    </>
+                  )}
+                </ImageUploadArea>
               </label>
-              {selectedFile && (
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-                  Selected file: {selectedFile.name}
-                </Typography>
-              )}
-              {previewUrl && (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: 200,
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    border: '1px solid #e0e0e0',
-                    position: 'relative'
-                  }}
-                >
-                  <img
-                    src={previewUrl}
-                    alt="Challenge preview"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover'
-                    }}
-                  />
-                </Box>
-              )}
             </Box>
-            
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
+
+            {/* Challenge Title */}
+            <Box>
+              <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                Challenge Title *
+              </Typography>
+              <TextField
+                placeholder="Enter an attractive title..."
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                fullWidth
+                required
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: '#f8f9fa',
+                    '& fieldset': {
+                      borderColor: '#dee2e6',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#adb5bd',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6c5ce7',
+                    },
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Description */}
+            <Box>
+              <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                Description *
+              </Typography>
+              <TextField
+                placeholder="Describe the essence of the challenge, rules and goals..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                fullWidth
+                required
+                multiline
+                rows={4}
+                variant="outlined"
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: '#f8f9fa',
+                    '& fieldset': {
+                      borderColor: '#dee2e6',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#adb5bd',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6c5ce7',
+                    },
+                  },
+                }}
+              />
+            </Box>
+
+            {/* Category */}
+            <Box>
+              <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                Category *
+              </Typography>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {categories.map((cat) => (
+                  <CategoryChip
+                    key={cat.id}
+                    label={cat.name}
+                    icon={renderCategoryIcon(cat.icon)}
+                    selected={category === cat.name}
+                    onClick={() => setCategory(cat.name)}
+                    clickable
+                  />
+                ))}
+              </Stack>
+            </Box>
+
+            {/* Difficulty */}
+            <Box>
+              <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                Difficulty *
+              </Typography>
+              <Stack direction="row" spacing={1}>
+                {difficulties.map((diff) => (
+                  <DifficultyChip
+                    key={diff}
+                    label={diff}
+                    selected={difficulty === diff}
+                    difficulty={diff}
+                    onClick={() => setDifficulty(diff)}
+                    clickable
+                  />
+                ))}
+              </Stack>
+            </Box>
+
+
+
+            {/* Points for Completion */}
+            <Box>
+              <Typography variant="body1" sx={{ mb: 1, fontWeight: 500 }}>
+                Points for Completion
+              </Typography>
+              <TextField
+                type="number"
+                value={points}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0;
+                  setPoints(value);
+                }}
+                fullWidth
+                variant="outlined"
+                inputProps={{ 
+                  min: pointsRange.min, 
+                  max: pointsRange.max 
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    backgroundColor: '#f8f9fa',
+                    '& fieldset': {
+                      borderColor: '#dee2e6',
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#adb5bd',
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: '#6c5ce7',
+                    },
+                  },
+                }}
+              />
+              <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
+                <Typography variant="caption" color="warning.main" sx={{ display: 'flex', alignItems: 'center' }}>
+                  💡 Recommended points: {pointsRange.recommended}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Buttons */}
+            <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
               <Button
                 onClick={handleClose}
                 variant="outlined"
-                color="inherit"
+                fullWidth
                 disabled={isLoading}
+                sx={{
+                  borderRadius: 3,
+                  py: 1.5,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderColor: '#dee2e6',
+                  color: '#6c757d',
+                  '&:hover': {
+                    borderColor: '#adb5bd',
+                    backgroundColor: '#f8f9fa',
+                  },
+                }}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 variant="contained"
-                color="primary"
-                disabled={isLoading}
+                fullWidth
+                disabled={isLoading || !title || !description || !category || !difficulty}
+                sx={{
+                  borderRadius: 3,
+                  py: 1.5,
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  backgroundColor: '#6c5ce7',
+                  '&:hover': {
+                    backgroundColor: '#5a4fcf',
+                  },
+                }}
               >
-                {isLoading ? 'Creating...' : 'Create'}
+                {isLoading ? 'Creating...' : 'Create Challenge'}
               </Button>
             </Stack>
           </Stack>
         </Box>
       </DialogContent>
-    </Dialog>
+    </StyledDialog>
   )
 } 

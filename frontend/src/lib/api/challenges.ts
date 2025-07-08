@@ -53,6 +53,12 @@ export const challengesApi = {
   create: async (data: CreateChallengeData, userId: string) => {
     await simulateDelay();
     
+    // Получаем данные пользователя из mockUsers
+    const user = mockUsers[userId];
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
     const newChallenge = {
       id: `challenge-${Date.now()}`,
       ...data,
@@ -62,8 +68,8 @@ export const challengesApi = {
       completionsCount: 0,
       timeLimit: 168, // 7 days in hours by default
       creator: {
-        username: 'You',
-        avatarUrl: '/images/avatars/default.svg'
+        username: user.username,
+        avatarUrl: user.avatarUrl || '/images/avatars/default.svg'
       }
     };
 
@@ -133,7 +139,7 @@ export const challengesApi = {
   updateChallengeStatus: async (
     challengeId: string,
     action: 'accept' | 'submit_proof' | 'approve' | 'reject',
-    proofData?: { proofUrl?: string; description?: string }
+    proofData?: { proofUrl?: string; description?: string; proofType?: 'image' | 'video' }
   ): Promise<ApiResponse<void>> => {
     await simulateDelay();
     
@@ -174,7 +180,7 @@ export const challengesApi = {
               likes: 0,
               dislikes: 0,
               proofUrl: proofData.proofUrl || '',
-              proofType: proofData.proofUrl?.includes('video') ? 'video' as const : 'image' as const,
+              proofType: proofData.proofType || 'image',
               description: proofData.description || '',
               status: 'pending' as const,
               submittedAt: new Date().toISOString(),
@@ -234,6 +240,100 @@ export const challengesApi = {
       return {
         data: undefined,
         error: 'Failed to update challenge status'
+      };
+    }
+  },
+
+  // Добавление/удаление задания в/из избранного
+  toggleFavorite: async (challengeId: string): Promise<ApiResponse<{ isFavorite: boolean }>> => {
+    await simulateDelay();
+    
+    try {
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        return {
+          data: { isFavorite: false },
+          error: 'User not found'
+        };
+      }
+      
+      const isFavorite = currentUser.favoritesChallenges.includes(challengeId);
+      
+      if (isFavorite) {
+        // Удаляем из избранных
+        currentUser.favoritesChallenges = currentUser.favoritesChallenges.filter((id: string) => id !== challengeId);
+      } else {
+        // Добавляем в избранные
+        currentUser.favoritesChallenges.push(challengeId);
+      }
+      
+      // Сохраняем изменения и уведомляем о обновлении
+      saveUserChanges(currentUser.id);
+      
+      return {
+        data: { isFavorite: !isFavorite }
+      };
+    } catch (error) {
+      return {
+        data: { isFavorite: false },
+        error: 'Failed to toggle favorite'
+      };
+    }
+  },
+
+  // Получение статуса избранного для задания
+  getFavoriteStatus: async (challengeId: string): Promise<ApiResponse<{ isFavorite: boolean }>> => {
+    await simulateDelay();
+    
+    try {
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        return {
+          data: { isFavorite: false },
+          error: 'User not found'
+        };
+      }
+      
+      const isFavorite = currentUser.favoritesChallenges.includes(challengeId);
+      
+      return {
+        data: { isFavorite }
+      };
+    } catch (error) {
+      return {
+        data: { isFavorite: false },
+        error: 'Failed to get favorite status'
+      };
+    }
+  },
+
+  // Получение всех избранных заданий
+  getFavorites: async (): Promise<ApiResponse<typeof mockChallenges>> => {
+    await simulateDelay();
+    
+    try {
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        return {
+          data: [],
+          error: 'User not found'
+        };
+      }
+      
+      const favoritesChallenges = mockChallenges.filter(challenge => 
+        currentUser.favoritesChallenges.includes(challenge.id)
+      );
+      
+      return {
+        data: favoritesChallenges
+      };
+    } catch (error) {
+      return {
+        data: [],
+        error: 'Failed to get favorites'
       };
     }
   }

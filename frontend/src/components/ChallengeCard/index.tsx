@@ -16,14 +16,17 @@ import {
 } from '@mui/material'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import FavoriteIcon from '@mui/icons-material/Favorite'
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'
+import BookmarkIcon from '@mui/icons-material/Bookmark'
 import GroupIcon from '@mui/icons-material/Group'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PersonIcon from '@mui/icons-material/Person'
 import ChallengeModal from '../ChallengeModal'
-import { mockChallengeLikes, mockCompletions } from '@/lib/mock/data'
+import { mockChallengeLikes, mockCompletions, mockUsers } from '@/lib/mock/data'
 import { useAuth } from '@/lib/providers/AuthProvider'
+import { challengesApi } from '@/lib/api/challenges'
 
 export interface ChallengeCardProps {
   challenge: {
@@ -133,9 +136,10 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const [likesCount, setLikesCount] = useState(0)
   const [completionsCount, setCompletionsCount] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
   const { user } = useAuth()
 
-  // Обновляем состояние лайков и количество выполнивших
+  // Обновляем состояние лайков, избранного и количество выполнивших
   const updateCounts = () => {
     const likes = mockChallengeLikes[challenge.id] || [];
     const userLiked = user ? likes.includes(user.id) : false;
@@ -144,6 +148,10 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
 
     const completions = mockCompletions[challenge.id] || [];
     setCompletionsCount(completions.length);
+
+    // Проверяем, добавлена ли задача в избранные
+    const userBookmarked = user ? user.favoritesChallenges.includes(challenge.id) : false;
+    setIsBookmarked(userBookmarked);
   }
 
   useEffect(() => {
@@ -165,6 +173,23 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
       }
       updateCounts(); // Обновляем состояние сразу после изменения
     }, Math.random() * 100 + 100);
+  }
+
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    
+    if (!user) return;
+    
+    try {
+      const response = await challengesApi.toggleFavorite(challenge.id);
+      if (!response.error) {
+        updateCounts();
+      } else {
+        console.error('Failed to toggle bookmark:', response.error);
+      }
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+    }
   }
 
   const getDifficultyColor = (difficulty: string) => {
@@ -366,6 +391,26 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
                 >
                   {likesCount}
                 </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <IconButton
+                  onClick={handleBookmark}
+                  size="small"
+                  sx={{ 
+                    p: 0,
+                    color: '#9CA3AF',
+                    '&:hover': {
+                      color: '#FFD700'
+                    }
+                  }}
+                >
+                  {isBookmarked ? (
+                    <BookmarkIcon sx={{ fontSize: 20, color: '#FFD700' }} />
+                  ) : (
+                    <BookmarkBorderIcon sx={{ fontSize: 20 }} />
+                  )}
+                </IconButton>
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
