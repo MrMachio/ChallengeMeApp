@@ -8,6 +8,7 @@ interface User {
   createdChallenges: string[];
   activeChallenges: string[];
   pendingChallenges: string[]; // Challenges waiting for creator approval
+  favoritesChallenges: string[]; // Favorite challenges bookmarked by user
   fullName?: string;
   followers?: number;
   following?: number;
@@ -29,6 +30,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['1', '7'],
     activeChallenges: ['3', '5', '9'],
     pendingChallenges: [],
+    favoritesChallenges: ['10', '11', '12'],
     followers: 120,
     following: 85
   },
@@ -43,6 +45,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['2', '6'],
     activeChallenges: ['4'],
     pendingChallenges: [],
+    favoritesChallenges: ['3', '7', '9'],
     followers: 75,
     following: 50
   },
@@ -57,6 +60,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['3'],
     activeChallenges: ['5', '6'],
     pendingChallenges: [],
+    favoritesChallenges: ['2', '8', '10'],
     followers: 250,
     following: 120
   },
@@ -71,6 +75,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['4'],
     activeChallenges: ['1', '2'],
     pendingChallenges: [],
+    favoritesChallenges: ['5', '9', '11'],
     followers: 95,
     following: 88
   },
@@ -85,6 +90,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['5'],
     activeChallenges: ['2', '6'],
     pendingChallenges: [],
+    favoritesChallenges: ['1', '4', '8'],
     followers: 180,
     following: 95
   },
@@ -99,6 +105,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['8', '11'],
     activeChallenges: ['7', '9'],
     pendingChallenges: [],
+    favoritesChallenges: ['1', '3', '10'],
     followers: 65,
     following: 42
   },
@@ -113,6 +120,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['9', '12'],
     activeChallenges: ['8', '10'],
     pendingChallenges: [],
+    favoritesChallenges: ['2', '4', '11'],
     followers: 195,
     following: 88
   },
@@ -127,6 +135,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['10', '13'],
     activeChallenges: ['9', '11'],
     pendingChallenges: [],
+    favoritesChallenges: ['1', '5', '12'],
     followers: 280,
     following: 150
   },
@@ -141,6 +150,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['14'],
     activeChallenges: ['10', '12'],
     pendingChallenges: [],
+    favoritesChallenges: ['2', '6', '13'],
     followers: 110,
     following: 75
   },
@@ -155,6 +165,7 @@ export const mockUsers: UserMap = {
     createdChallenges: ['15'],
     activeChallenges: ['11', '13'],
     pendingChallenges: [],
+    favoritesChallenges: ['1', '4', '7'],
     followers: 165,
     following: 92
   }
@@ -483,12 +494,12 @@ Object.keys(mockUsers).forEach(userId => {
 });
 
 export const mockCategories = [
-  { id: '1', name: 'Sports', icon: '🏃‍♂️' },
-  { id: '2', name: 'Creative', icon: '🎨' },
-  { id: '3', name: 'Educational', icon: '📚' },
-  { id: '4', name: 'Environmental', icon: '🌱' },
-  { id: '5', name: 'Social', icon: '🤝' },
-  { id: '6', name: 'Other', icon: '✨' }
+  { id: '1', name: 'Educational', icon: 'SchoolIcon' },
+  { id: '2', name: 'Environmental', icon: 'NatureIcon' },
+  { id: '3', name: 'Sports', icon: 'FitnessCenterIcon' },
+  { id: '4', name: 'Creative', icon: 'PaletteIcon' },
+  { id: '5', name: 'Social', icon: 'GroupIcon' },
+  { id: '6', name: 'Other', icon: 'MoreHorizIcon' }
 ];
 
 export const mockComments = [
@@ -672,6 +683,22 @@ export const mockCompletions: CompletionsMap = {
       status: 'approved',
       submittedAt: '2024-02-13T15:45:00Z',
       completedAt: '2024-02-13T16:45:00Z'
+    },
+    {
+      id: 'completion16',
+      userId: 'user6',
+      username: mockUsers['user6'].username,
+      avatarUrl: mockUsers['user6'].avatarUrl,
+      rating: 4.7,
+      userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
+      likes: 38,
+      dislikes: 1,
+      proofUrl: '/videos/proofs/running-video1.mp4',
+      proofType: 'video',
+      description: 'Here\'s my 5K training journey! This video shows my progression from struggling with 1K to completing the full 5K run. The finish line moment was incredible!',
+      status: 'approved',
+      submittedAt: '2024-02-14T18:30:00Z',
+      completedAt: '2024-02-14T19:30:00Z'
     }
   ],
   '4': [
@@ -800,6 +827,58 @@ export const mockCompletions: CompletionsMap = {
       userId: 'user9',
       username: mockUsers['user9'].username,
       avatarUrl: mockUsers['user9'].avatarUrl,
+      rating: 4.5,
+      userRatings: { 'user1': 5, 'user2': 4, 'user3': 4, 'user4': 5 },
+      likes: 23,
+      dislikes: 0,
+      proofUrl: '/videos/proofs/book-video1.mp4',
+      proofType: 'video',
+      description: 'Made a video review of all 5 books I read this month! Each book taught me something valuable. Check out my detailed analysis and favorite quotes.',
+      status: 'approved',
+      submittedAt: '2024-02-22T16:30:00Z',
+      completedAt: '2024-02-22T17:30:00Z'
+    }
+  ],
+  '9': [
+    {
+      id: 'completion13',
+      userId: 'user2',
+      username: mockUsers['user2'].username,
+      avatarUrl: mockUsers['user2'].avatarUrl,
+      rating: 4.8,
+      userRatings: { 'user1': 5, 'user3': 5, 'user4': 4, 'user5': 5, 'user6': 5 },
+      likes: 47,
+      dislikes: 1,
+      proofUrl: '/videos/proofs/garden-video1.mp4',
+      proofType: 'video',
+      description: 'Time-lapse video of my urban garden project! Watch my plants grow from seeds to full vegetables over 2 weeks. So satisfying to see the progress!',
+      status: 'approved',
+      submittedAt: '2024-02-23T14:15:00Z',
+      completedAt: '2024-02-23T15:15:00Z'
+    },
+    {
+      id: 'completion15',
+      userId: 'user7',
+      username: mockUsers['user7'].username,
+      avatarUrl: mockUsers['user7'].avatarUrl,
+      rating: 4.6,
+      userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
+      likes: 31,
+      dislikes: 2,
+      proofUrl: '/images/proofs/garden-proof1.jpg',
+      proofType: 'image',
+      description: 'Created a beautiful herb garden on my apartment balcony! These fresh herbs have transformed my cooking experience.',
+      status: 'approved',
+      submittedAt: '2024-02-23T07:45:00Z',
+      completedAt: '2024-02-23T08:45:00Z'
+    }
+  ],
+  '14': [
+    {
+      id: 'completion14',
+      userId: 'user3',
+      username: mockUsers['user3'].username,
+      avatarUrl: mockUsers['user3'].avatarUrl,
       rating: 0,
       userRatings: {},
       likes: 0,
@@ -810,24 +889,6 @@ export const mockCompletions: CompletionsMap = {
       status: 'rejected',
       submittedAt: '2024-02-20T11:15:00Z',
       completedAt: '2024-02-20T11:15:00Z'
-    }
-  ],
-  '9': [
-    {
-      id: 'completion13',
-      userId: 'user7',
-      username: mockUsers['user7'].username,
-      avatarUrl: mockUsers['user7'].avatarUrl,
-      rating: 4.6,
-      userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
-      likes: 31,
-      dislikes: 2,
-      proofUrl: '/images/proofs/fitness-proof1.jpg',
-      proofType: 'image',
-      description: 'Achieved my fitness goals! 30 days of consistent workouts and proper nutrition. This transformation photo shows the incredible results.',
-      status: 'approved',
-      submittedAt: '2024-02-23T07:45:00Z',
-      completedAt: '2024-02-23T08:45:00Z'
     }
   ]
 };

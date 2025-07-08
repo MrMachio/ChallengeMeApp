@@ -9,7 +9,7 @@ import CreateChallengeModal from '@/components/CreateChallengeModal'
 import {mockChallenges, mockChallengeLikes, mockCompletions} from '@/lib/mock/data'
 import { useAuth } from '@/lib/providers/AuthProvider'
 
-export type Category = "Educational" | "Environmental" | "Sports" | "Creative" | "Social" | "Other";
+export type Category = "All Categories" | "Educational" | "Environmental" | "Sports" | "Creative" | "Social" | "Other" | "Favorites";
 export type SortField = 'none' | 'completions' | 'points' | 'likes';
 export type SortDirection = 'asc' | 'desc';
 export type ChallengeStatus = 'all' | 'completed' | 'active' | 'created' | 'available';
@@ -21,7 +21,7 @@ export interface SortConfig {
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState<string>('')
-  const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>(['All Categories'])
   const [selectedStatus, setSelectedStatus] = useState<ChallengeStatus>('all')
   const [sortConfig, setSortConfig] = useState<SortConfig>({ field: 'none', direction: 'desc' })
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -46,9 +46,29 @@ export default function Home() {
 
     // Filter challenges
     const filtered = challenges.filter(challenge => {
+      const challengeId = challenge.id.toString();
+      
       // Filter by category
-      if (selectedCategories.length > 0 && !selectedCategories.includes(challenge.category as Category)) {
-        return false
+      if (selectedCategories.length > 0 && !selectedCategories.includes('All Categories')) {
+        const hasFavorites = selectedCategories.includes('Favorites');
+        const regularCategories = selectedCategories.filter(cat => cat !== 'Favorites' && cat !== 'All Categories');
+        
+        let categoryMatch = false;
+        
+        // Check if challenge matches regular categories
+        if (regularCategories.length > 0 && regularCategories.includes(challenge.category as any)) {
+          categoryMatch = true;
+        }
+        
+        // Check if challenge is in favorites
+        if (hasFavorites && user && user.favoritesChallenges.includes(challengeId)) {
+          categoryMatch = true;
+        }
+        
+        // If no match found and we have filters, exclude this challenge
+        if (!categoryMatch) {
+          return false;
+        }
       }
 
       // Filter by status
@@ -58,7 +78,6 @@ export default function Home() {
           return selectedStatus === 'available';
         }
 
-        const challengeId = challenge.id.toString();
         console.log('Filtering challenge:', {
           challengeId,
           selectedStatus,

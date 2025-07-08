@@ -45,10 +45,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/profile/[username]/not-found.js"
     ],
-    "/login/page": [
+    "/users/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/login/page.js"
+      "static/chunks/app/users/page.js"
     ]
   }
 }

@@ -13,6 +13,7 @@ export interface User {
   activeChallenges: string[]
   createdChallenges: string[]
   pendingChallenges: string[]
+  favoritesChallenges: string[]
 }
 
 export function useAuth() {
@@ -34,7 +35,8 @@ export function useAuth() {
         completedChallenges: mockUser.completedChallenges,
         activeChallenges: mockUser.activeChallenges,
         createdChallenges: mockUser.createdChallenges,
-        pendingChallenges: mockUser.pendingChallenges
+        pendingChallenges: mockUser.pendingChallenges,
+        favoritesChallenges: mockUser.favoritesChallenges
       }
     }
     return null
@@ -130,6 +132,7 @@ export function useAuth() {
       activeChallenges: [],
       createdChallenges: [],
       pendingChallenges: [],
+      favoritesChallenges: [],
       followers: 0,
       following: 0
     }

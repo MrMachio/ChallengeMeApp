@@ -28,8 +28,11 @@ import CompletedUsersList from '../CompletedUsersList'
 import { mockCompletions, mockChallengeLikes, mockUsers, recalculateRating } from '@/lib/mock/data'
 import { useChallengeStatus } from '@/lib/hooks/useChallengeStatus'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { challengesApi } from '@/lib/api/challenges'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import SendIcon from '@mui/icons-material/Send'
+import ReplyIcon from '@mui/icons-material/Reply'
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -99,6 +102,16 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
+interface Comment {
+  id: string
+  userId: string
+  username: string
+  avatarUrl: string | null
+  content: string
+  createdAt: string
+  replies: Comment[]
+}
+
 interface ChallengeModalProps {
   open: boolean
   onClose: () => void
@@ -122,6 +135,49 @@ interface ChallengeModalProps {
 }
 
 export default function ChallengeModal({ open, onClose, challenge }: ChallengeModalProps) {
+  // Generate initial comments based on challenge age and popularity
+  const generateInitialComments = (challengeId: string): Comment[] => {
+    // For new challenges (created recently), return empty array
+    const now = new Date()
+    const challengeCreated = new Date(challenge.createdAt)
+    const hoursSinceCreated = (now.getTime() - challengeCreated.getTime()) / (1000 * 60 * 60)
+    
+    // If challenge is less than 1 hour old, no comments yet
+    if (hoursSinceCreated < 1) {
+      return []
+    }
+    
+    // For older challenges, generate some sample comments based on ID
+    const sampleComments: Comment[] = [
+      {
+        id: `comment-${challengeId}-1`,
+        userId: 'user4',
+        username: 'Sarah Chen',
+        avatarUrl: '/images/avatars/user4.jpg',
+        content: 'This looks like a great challenge! Looking forward to participating.',
+        createdAt: new Date(challengeCreated.getTime() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours after creation
+        replies: []
+      },
+      {
+        id: `comment-${challengeId}-2`,
+        userId: 'user3',
+        username: 'Mike Johnson', 
+        avatarUrl: '/images/avatars/user3.jpg',
+        content: 'Thanks for creating this! Exactly what I needed.',
+        createdAt: new Date(challengeCreated.getTime() + 4 * 60 * 60 * 1000).toISOString(), // 4 hours after creation
+        replies: []
+      }
+    ]
+    
+    // Return different number of comments based on challenge popularity
+    if (challenge.likesCount > 10) {
+      return sampleComments
+    } else if (challenge.likesCount > 5) {
+      return [sampleComments[0]]
+    } else {
+      return []
+    }
+  }
   // Используем новый хук для управления статусом задания
   const { status: challengeStatus, loading: statusLoading, updateStatus } = useChallengeStatus(challenge.id)
   // Получаем текущего пользователя
@@ -130,11 +186,18 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
   const [isBookmarked, setIsBookmarked] = useState(false)
+  const [bookmarkLoading, setBookmarkLoading] = useState(false)
   const [showProofUpload, setShowProofUpload] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [proofDescription, setProofDescription] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Comments state
+  const [comments, setComments] = useState<Comment[]>(() => generateInitialComments(challenge.id))
+  const [newComment, setNewComment] = useState('')
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
 
   // Get completions for this challenge
   const completedUsers = mockCompletions[challenge.id] || [];
@@ -150,12 +213,46 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   useEffect(() => {
     if (open) {
       updateLikes();
+      // Загружаем статус избранного
+      loadBookmarkStatus();
       setShowProofUpload(false);
       setSelectedFile(null);
       setPreviewUrl(null);
       setProofDescription('');
     }
   }, [open, challenge.id]);
+
+  const loadBookmarkStatus = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const response = await challengesApi.getFavoriteStatus(challenge.id);
+      if (!response.error) {
+        setIsBookmarked(response.data.isFavorite);
+      }
+    } catch (error) {
+      console.error('Failed to load bookmark status:', error);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!currentUser || bookmarkLoading) return;
+    
+    setBookmarkLoading(true);
+    
+    try {
+      const response = await challengesApi.toggleFavorite(challenge.id);
+      if (!response.error) {
+        setIsBookmarked(response.data.isFavorite);
+      } else {
+        console.error('Failed to toggle bookmark:', response.error);
+      }
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
 
   const handleLike = () => {
     if (!currentUser) return;
@@ -197,9 +294,13 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       // Создаем URL для файла
       const proofUrl = URL.createObjectURL(selectedFile);
       
+      // Определяем тип медиа на основе файла
+      const proofType = selectedFile.type.startsWith('video/') ? 'video' : 'image';
+      
       await updateStatus('submit_proof', {
         proofUrl,
-        description: proofDescription
+        description: proofDescription,
+        proofType
       });
 
       // Обновляем UI
@@ -208,16 +309,84 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       setPreviewUrl(null);
       setProofDescription('');
 
-      // Закрываем модальное окно
-      onClose();
+      // Не закрываем модальное окно, пользователь остается в нем
     } catch (error) {
       console.error('Failed to submit proof:', error);
     }
   }
 
-  const handleCancelChallenge = () => {
-    // TODO: Implement API call to cancel challenge
+  const handleCancelChallenge = async () => {
+    try {
+      // Manually remove challenge from active challenges and return to 'none' state
+      const currentUserId = localStorage.getItem('currentUserId');
+      if (currentUserId) {
+        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        const activeChallenges = userData.activeChallenges || [];
+        
+        // Remove challenge from active challenges
+        const updatedActiveChallenges = activeChallenges.filter((id: string) => id !== challenge.id);
+        
+        userData.activeChallenges = updatedActiveChallenges;
+        localStorage.setItem('userData', JSON.stringify(userData));
+        
+        // Update global mockUsers data
+        const { mockUsers } = await import('@/lib/mock/data');
+        if (mockUsers[currentUserId]) {
+          mockUsers[currentUserId].activeChallenges = updatedActiveChallenges;
+        }
+        
+        // Trigger status refetch to update UI
+        window.dispatchEvent(new Event('userUpdated'));
+      }
+      
+      setShowProofUpload(false);
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setProofDescription('');
+    } catch (error) {
+      console.error('Failed to cancel challenge:', error);
+    }
   }
+
+  // Comments handlers
+  const handleAddComment = () => {
+    if (!newComment.trim() || !currentUser) return;
+    
+    const comment: Comment = {
+      id: Date.now().toString(),
+      userId: currentUser.id,
+      username: currentUser.username,
+      avatarUrl: currentUser.avatarUrl || '/images/avatars/default.svg',
+      content: newComment,
+      createdAt: new Date().toISOString(),
+      replies: []
+    };
+    
+    setComments(prev => [comment, ...prev]);
+    setNewComment('');
+  };
+
+  const handleAddReply = (commentId: string) => {
+    if (!replyText.trim() || !currentUser) return;
+    
+    const reply: Comment = {
+      id: `${commentId}-${Date.now()}`,
+      userId: currentUser.id,
+      username: currentUser.username,
+      avatarUrl: currentUser.avatarUrl || '/images/avatars/default.svg',
+      content: replyText,
+      createdAt: new Date().toISOString(),
+      replies: []
+    };
+    
+    setComments(prev => prev.map(comment => 
+      comment.id === commentId 
+        ? { ...comment, replies: [reply, ...comment.replies] }
+        : comment
+    ));
+    setReplyText('');
+    setReplyingTo(null);
+  };
 
   // Handler functions for completion management
   const handleApproveCompletion = async (completionId: string) => {
@@ -255,19 +424,26 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
     if (completion) {
       completion.status = 'rejected'
       
-      // Move user from pending back to active challenges
+      // Remove challenge completely from user's lists (like Cancel Challenge)
       const user = mockUsers[completion.userId]
       if (user) {
+        // Remove from pending challenges
         user.pendingChallenges = user.pendingChallenges.filter((id: string) => id !== challenge.id.toString())
-        if (!user.activeChallenges.includes(challenge.id.toString())) {
-          user.activeChallenges.push(challenge.id.toString())
-        }
+        // Also remove from active challenges to return to 'none' state
+        user.activeChallenges = user.activeChallenges.filter((id: string) => id !== challenge.id.toString())
       }
       
       // Update localStorage if it's current user
       if (currentUser && completion.userId === currentUser.id) {
         try {
-          await updateStatus('reject')
+          // Update local storage to reflect the cancelled state
+          const userData = JSON.parse(localStorage.getItem('userData') || '{}')
+          userData.pendingChallenges = userData.pendingChallenges?.filter((id: string) => id !== challenge.id.toString()) || []
+          userData.activeChallenges = userData.activeChallenges?.filter((id: string) => id !== challenge.id.toString()) || []
+          localStorage.setItem('userData', JSON.stringify(userData))
+          
+          // Trigger status refetch to update UI
+          window.dispatchEvent(new Event('userUpdated'))
         } catch (error) {
           console.error('Failed to reject completion:', error)
         }
@@ -293,19 +469,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
     }
   }
 
-  const handleLikeCompletion = (completionId: string) => {
-    const completion = mockCompletions[challenge.id]?.find(c => c.id === completionId)
-    if (completion && completion.status === 'approved') {
-      completion.likes += 1
-    }
-  }
 
-  const handleDislikeCompletion = (completionId: string) => {
-    const completion = mockCompletions[challenge.id]?.find(c => c.id === completionId)
-    if (completion && completion.status === 'approved') {
-      completion.dislikes += 1
-    }
-  }
 
   // Добавляем функцию для определения цветов сложности
   const getDifficultyColor = (difficulty: string) => {
@@ -442,12 +606,13 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                 {likesCount}
               </Typography>
               <IconButton 
-                onClick={() => setIsBookmarked(!isBookmarked)}
+                onClick={handleBookmark}
+                disabled={bookmarkLoading}
                 sx={{
                   '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
                 }}
               >
-                {isBookmarked ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+                {isBookmarked ? <BookmarkIcon sx={{ color: '#FFD700' }} /> : <BookmarkBorderIcon />}
               </IconButton>
             </Stack>
           </Box>
@@ -461,7 +626,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
             />
             <Box>
               <Typography variant="subtitle2">
-                {challenge.creator.username}
+                {currentUser?.id === challenge.creatorId ? 'you' : challenge.creator.username}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}
@@ -476,10 +641,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
           {challengeStatus?.status === 'none' && (
             <Button
               variant="contained"
-              color="primary"
               onClick={handleAcceptChallenge}
               disabled={statusLoading}
+              fullWidth
+              data-testid="accept-challenge-btn"
               sx={{
+                background: 'linear-gradient(135deg, #4CAF50 0%, #2196F3 100%)',
                 borderRadius: '100px',
                 px: 4,
                 py: 1.5,
@@ -488,6 +655,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                 textTransform: 'none',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                 '&:hover': {
+                  background: 'linear-gradient(135deg, #45a049 0%, #1976D2 100%)',
                   boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
                 },
               }}
@@ -498,10 +666,60 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
 
           {/* Accepted (in active challenges) */}
           {challengeStatus?.status === 'active' && !showProofUpload && (
+            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={handleCancelChallenge}
+                disabled={statusLoading}
+                data-testid="cancel-challenge-btn"
+                sx={{
+                  borderRadius: '100px',
+                  px: 3,
+                  py: 1.5,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  flex: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(244, 67, 54, 0.04)',
+                  },
+                }}
+              >
+                Cancel Challenge
+              </Button>
+              <Button
+                variant="contained"
+                onClick={() => setShowProofUpload(true)}
+                disabled={statusLoading}
+                data-testid="submit-proof-btn"
+                sx={{
+                  backgroundColor: '#9C27B0',
+                  borderRadius: '100px',
+                  px: 3,
+                  py: 1.5,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  flex: 1,
+                  '&:hover': {
+                    backgroundColor: '#7B1FA2',
+                  },
+                }}
+              >
+                Submit Proof
+              </Button>
+            </Box>
+          )}
+
+          {/* Pending approval */}
+          {challengeStatus?.status === 'pending' && (
             <Button
               variant="contained"
-              color="success"
-              onClick={() => setShowProofUpload(true)}
+              color="warning"
+              disabled
+              fullWidth
+              startIcon={<AccessTimeIcon />}
               sx={{
                 borderRadius: '100px',
                 px: 4,
@@ -510,43 +728,37 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                 fontWeight: 600,
                 textTransform: 'none',
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                '&:hover': {
-                  boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
-                },
               }}
             >
-              Submit Proof
+              Pending Approval
             </Button>
-          )}
-
-          {/* Pending approval */}
-          {challengeStatus?.status === 'pending' && (
-            <Chip
-              label="Pending Approval"
-              color="warning"
-              icon={<AccessTimeIcon />}
-              sx={{
-                fontSize: '16px',
-                fontWeight: 600,
-                height: '48px',
-                px: 2
-              }}
-            />
           )}
 
           {/* Completed */}
           {challengeStatus?.status === 'completed' && (
-            <Chip
-              label="Completed"
-              color="success"
-              icon={<CheckCircleIcon />}
+            <Button
+              variant="contained"
+              disabled
+              fullWidth
+              startIcon={<CheckCircleIcon />}
               sx={{
+                borderRadius: '100px',
+                px: 4,
+                py: 1.5,
                 fontSize: '16px',
                 fontWeight: 600,
-                height: '48px',
-                px: 2
+                textTransform: 'none',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                backgroundColor: '#4CAF50',
+                color: 'white',
+                '&.Mui-disabled': {
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                }
               }}
-            />
+            >
+              Completed
+            </Button>
           )}
         </Box>
 
@@ -562,7 +774,15 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                 component="label"
                 variant="outlined"
                 startIcon={<CloudUploadIcon />}
-                sx={{ alignSelf: 'center' }}
+                fullWidth
+                sx={{
+                  borderRadius: '100px',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                }}
               >
                 Upload Photo/Video
                 <VisuallyHiddenInput
@@ -574,15 +794,16 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
               </Button>
 
               {previewUrl && (
-                <Box sx={{ width: '100%', maxWidth: 400, mb: 2, alignSelf: 'center' }}>
+                <Box sx={{ width: '100%', mb: 2 }}>
                   {selectedFile?.type.startsWith('image/') ? (
                     <Box
                       sx={{
                         width: '100%',
                         height: 200,
                         position: 'relative',
-                        borderRadius: 1,
-                        overflow: 'hidden'
+                        borderRadius: 2,
+                        overflow: 'hidden',
+                        border: '2px solid #e0e0e0'
                       }}
                     >
                       <Image
@@ -596,7 +817,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                     <video
                       src={previewUrl}
                       controls
-                      style={{ width: '100%', maxHeight: 200, borderRadius: 8 }}
+                      style={{ 
+                        width: '100%', 
+                        maxHeight: 200, 
+                        borderRadius: 16,
+                        border: '2px solid #e0e0e0'
+                      }}
                     />
                   )}
                 </Box>
@@ -619,6 +845,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                 color="primary"
                 disabled={!selectedFile || !proofDescription.trim()}
                 onClick={handleSubmitProof}
+                fullWidth
                 sx={{
                   borderRadius: '100px',
                   px: 4,
@@ -626,7 +853,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                   fontSize: '16px',
                   fontWeight: 600,
                   textTransform: 'none',
-                  alignSelf: 'center'
+                  background: 'linear-gradient(135deg, #4CAF50 0%, #2196F3 100%)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #45a049 0%, #1976D2 100%)',
+                    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+                  },
                 }}
               >
                 Confirm Submission
@@ -647,11 +879,236 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
               onApprove={handleApproveCompletion}
               onReject={handleRejectCompletion}
               onRate={handleRateCompletion}
-              onLike={handleLikeCompletion}
-              onDislike={handleDislikeCompletion}
             />
           </Box>
         )}
+
+        {/* Комментарии */}
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Comments ({comments.length})
+          </Typography>
+          
+          {/* Добавить новый комментарий */}
+          {currentUser && (
+            <Box sx={{ mb: 3 }}>
+              <Stack direction="row" spacing={2} alignItems="flex-start">
+                <Avatar
+                  src={currentUser.avatarUrl || '/images/avatars/default.svg'}
+                  alt={currentUser.username}
+                  sx={{ width: 40, height: 40 }}
+                />
+                <Box sx={{ flex: 1 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    placeholder="Add a comment..."
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    variant="outlined"
+                    data-testid="comment-input"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        backgroundColor: '#f8f9fa',
+                        '&:hover fieldset': {
+                          borderColor: '#6c5ce7',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#6c5ce7',
+                        },
+                      },
+                    }}
+                  />
+                  <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button
+                      variant="contained"
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      endIcon={<SendIcon />}
+                      data-testid="post-comment-btn"
+                      sx={{
+                        borderRadius: 2,
+                        backgroundColor: '#6c5ce7',
+                        '&:hover': {
+                          backgroundColor: '#5a4fcf',
+                        },
+                      }}
+                    >
+                      Post Comment
+                    </Button>
+                  </Box>
+                </Box>
+              </Stack>
+            </Box>
+          )}
+
+          {/* Список комментариев */}
+          <Stack spacing={3}>
+            {comments.map((comment) => (
+              <Box key={comment.id} sx={{ position: 'relative' }}>
+                <Stack direction="row" spacing={2} alignItems="flex-start">
+                  <Avatar
+                    src={comment.avatarUrl || '/images/avatars/default.svg'}
+                    alt={comment.username}
+                    sx={{ width: 40, height: 40 }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: 2, 
+                      p: 2,
+                      position: 'relative',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: -6,
+                        top: 12,
+                        width: 0,
+                        height: 0,
+                        borderStyle: 'solid',
+                        borderWidth: '6px 6px 6px 0',
+                        borderColor: 'transparent #f8f9fa transparent transparent'
+                      }
+                    }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                        {comment.username}
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                          {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                        </Typography>
+                      </Typography>
+                      <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
+                        {comment.content}
+                      </Typography>
+                    </Box>
+                    
+                    {/* Действия с комментарием */}
+                    <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Button
+                        size="small"
+                        onClick={() => setReplyingTo(comment.id)}
+                        startIcon={<ReplyIcon />}
+                        sx={{ 
+                          color: 'text.secondary',
+                          '&:hover': { color: 'primary.main' }
+                        }}
+                      >
+                        Reply
+                      </Button>
+                    </Box>
+
+                    {/* Форма ответа */}
+                    {replyingTo === comment.id && currentUser && (
+                      <Box sx={{ mt: 2 }}>
+                        <Stack direction="row" spacing={2} alignItems="flex-start">
+                          <Avatar
+                            src={currentUser.avatarUrl || '/images/avatars/default.svg'}
+                            alt={currentUser.username}
+                            sx={{ width: 32, height: 32 }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <TextField
+                              fullWidth
+                              multiline
+                              rows={2}
+                              placeholder="Write a reply..."
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              variant="outlined"
+                              size="small"
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                  backgroundColor: '#fff',
+                                },
+                              }}
+                            />
+                            <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                              <Button
+                                size="small"
+                                onClick={() => setReplyingTo(null)}
+                                sx={{ color: 'text.secondary' }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="small"
+                                variant="contained"
+                                onClick={() => handleAddReply(comment.id)}
+                                disabled={!replyText.trim()}
+                                sx={{
+                                  borderRadius: 2,
+                                  backgroundColor: '#6c5ce7',
+                                  '&:hover': {
+                                    backgroundColor: '#5a4fcf',
+                                  },
+                                }}
+                              >
+                                Reply
+                              </Button>
+                            </Box>
+                          </Box>
+                        </Stack>
+                      </Box>
+                    )}
+
+                    {/* Ответы */}
+                    {comment.replies && comment.replies.length > 0 && (
+                      <Box sx={{ mt: 2, pl: 2, borderLeft: '2px solid #e9ecef' }}>
+                        <Stack spacing={2}>
+                          {comment.replies.map((reply: any) => (
+                            <Box key={reply.id}>
+                              <Stack direction="row" spacing={2} alignItems="flex-start">
+                                <Avatar
+                                  src={reply.avatarUrl || '/images/avatars/default.svg'}
+                                  alt={reply.username}
+                                  sx={{ width: 32, height: 32 }}
+                                />
+                                <Box sx={{ flex: 1 }}>
+                                  <Box sx={{ 
+                                    backgroundColor: '#fff', 
+                                    borderRadius: 2, 
+                                    p: 1.5,
+                                    border: '1px solid #e9ecef',
+                                    position: 'relative',
+                                    '&::before': {
+                                      content: '""',
+                                      position: 'absolute',
+                                      left: -6,
+                                      top: 8,
+                                      width: 0,
+                                      height: 0,
+                                      borderStyle: 'solid',
+                                      borderWidth: '5px 5px 5px 0',
+                                      borderColor: 'transparent #fff transparent transparent'
+                                    }
+                                  }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5, fontSize: '0.875rem' }}>
+                                      {reply.username}
+                                      <Typography component="span" variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                        {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
+                                      </Typography>
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ lineHeight: 1.6, fontSize: '0.875rem' }}>
+                                      {reply.content}
+                                    </Typography>
+                                  </Box>
+                                  
+
+                                </Box>
+                              </Stack>
+                            </Box>
+                          ))}
+                        </Stack>
+                      </Box>
+                    )}
+                  </Box>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        </Box>
       </DialogContent>
     </StyledDialog>
   )
