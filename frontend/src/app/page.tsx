@@ -8,6 +8,7 @@ import Filters from '@/components/Filters'
 import CreateChallengeModal from '@/components/CreateChallengeModal'
 import {mockChallenges, mockChallengeLikes, mockCompletions} from '@/lib/mock/data'
 import { useAuth } from '@/lib/providers/AuthProvider'
+import { createSkeletonArray } from '@/lib/utils'
 
 export type Category = "All Categories" | "Educational" | "Environmental" | "Sports" | "Creative" | "Social" | "Other" | "Favorites";
 export type SortField = 'none' | 'completions' | 'points' | 'likes';
@@ -29,7 +30,7 @@ export default function Home() {
   const [challenges, setChallenges] = useState<typeof mockChallenges>([])
   const { user } = useAuth()
 
-  // Имитируем загрузку данных
+  // Simulate data loading
   useEffect(() => {
     const loadChallenges = async () => {
       setIsLoading(true)
@@ -73,7 +74,7 @@ export default function Home() {
 
       // Filter by status
       if (selectedStatus !== 'all') {
-        // Если пользователь не авторизован, показываем только доступные задачи
+        // If user is not authenticated, show only available challenges
         if (!user) {
           return selectedStatus === 'available';
         }
@@ -141,10 +142,8 @@ export default function Home() {
     })
   }, [searchQuery, selectedCategories, selectedStatus, sortConfig, user, challenges, isLoading])
 
-  // Создаем массив скелетонов для отображения во время загрузки
-  const skeletonCards = Array.from({ length: 9 }, (_, index) => (
-    <ChallengeCardSkeleton key={`skeleton-${index}`} />
-  ))
+  // Create skeleton array for loading display
+  const skeletonCards = createSkeletonArray(9, ChallengeCardSkeleton)
 
   return (
     <Container

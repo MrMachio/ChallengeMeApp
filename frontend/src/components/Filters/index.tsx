@@ -209,7 +209,18 @@ export default function Filters({
               minWidth: { xs: '100%', sm: 200 }
             }}
           >
-            <InputLabel>Status</InputLabel>
+            <InputLabel
+              sx={{
+                '&.MuiInputLabel-shrink': {
+                  transform: 'translate(14px, -9px) scale(0.75)',
+                  backgroundColor: 'background.paper',
+                  px: 0.5,
+                  zIndex: 1
+                }
+              }}
+            >
+              Status
+            </InputLabel>
             <Select
               value={selectedStatus}
               label="Status"
@@ -234,7 +245,18 @@ export default function Filters({
               minWidth: { xs: '100%', sm: 200 }
             }}
           >
-            <InputLabel>Categories</InputLabel>
+            <InputLabel
+              sx={{
+                '&.MuiInputLabel-shrink': {
+                  transform: 'translate(14px, -9px) scale(0.75)',
+                  backgroundColor: 'background.paper',
+                  px: 0.5,
+                  zIndex: 1
+                }
+              }}
+            >
+              Categories
+            </InputLabel>
             <Select
               multiple
               value={selectedCategories}
@@ -326,7 +348,18 @@ export default function Filters({
               minWidth: { xs: '100%', sm: 200 }
             }}
           >
-            <InputLabel>Sort by</InputLabel>
+            <InputLabel
+              sx={{
+                '&.MuiInputLabel-shrink': {
+                  transform: 'translate(14px, -9px) scale(0.75)',
+                  backgroundColor: 'background.paper',
+                  px: 0.5,
+                  zIndex: 1
+                }
+              }}
+            >
+              Sort by
+            </InputLabel>
             <Select
               value={sortConfig.field}
               label="Sort by"

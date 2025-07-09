@@ -29,6 +29,7 @@ import { mockCompletions, mockChallengeLikes, mockUsers, recalculateRating } fro
 import { useChallengeStatus } from '@/lib/hooks/useChallengeStatus'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { challengesApi } from '@/lib/api/challenges'
+import { getDifficultyColor, formatTimeAgo } from '@/lib/utils'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SendIcon from '@mui/icons-material/Send'
@@ -178,9 +179,9 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       return []
     }
   }
-  // Используем новый хук для управления статусом задания
+  // Use new hook for challenge status management
   const { status: challengeStatus, loading: statusLoading, updateStatus } = useChallengeStatus(challenge.id)
-  // Получаем текущего пользователя
+  // Get current user
   const { user: currentUser } = useAuth()
   
   const [isLiked, setIsLiked] = useState(false)
@@ -220,7 +221,15 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       setPreviewUrl(null);
       setProofDescription('');
     }
-  }, [open, challenge.id]);
+  }, [open, challenge.id, challenge.likesCount]);
+
+  // Additional effect to update likes and bookmarks when challenge data changes
+  useEffect(() => {
+    if (open) {
+      updateLikes();
+      loadBookmarkStatus();
+    }
+  }, [challenge.likesCount, currentUser?.favoritesChallenges]);
 
   const loadBookmarkStatus = async () => {
     if (!currentUser) return;
@@ -257,7 +266,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   const handleLike = () => {
     if (!currentUser) return;
     
-    // Уменьшаем задержку до 100-200мс
+    // Reduce delay to 100-200ms
     setTimeout(() => {
       const likes = mockChallengeLikes[challenge.id] || [];
       if (!isLiked) {
@@ -265,7 +274,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       } else {
         mockChallengeLikes[challenge.id] = likes.filter(id => id !== currentUser.id);
       }
-      updateLikes(); // Обновляем состояние сразу после изменения
+              updateLikes(); // Update state immediately after change
     }, Math.random() * 100 + 100);
   }
 
@@ -402,9 +411,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
         if (!user.completedChallenges.includes(challenge.id.toString())) {
           user.completedChallenges.push(challenge.id.toString())
           
-          // Add points to user for completing the challenge
-          const challengePoints = challenge.points || 0
-          user.points += challengePoints
+          // Award points only if it's not the current user (to avoid double awarding)
+          // If it's the current user, points will be awarded in challengesApi.updateChallengeStatus
+          if (!currentUser || completion.userId !== currentUser.id) {
+            const challengePoints = challenge.points || 0
+            user.points += challengePoints
+          }
         }
       }
       
@@ -472,18 +484,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
 
 
   // Добавляем функцию для определения цветов сложности
-  const getDifficultyColor = (difficulty: string) => {
-    switch(difficulty.toLowerCase()) {
-      case 'easy':
-        return { bg: '#E8F5E9', color: '#2E7D32' }
-      case 'medium':
-        return { bg: '#FFF3E0', color: '#E65100' }
-      case 'hard':
-        return { bg: '#FFEBEE', color: '#C62828' }
-      default:
-        return { bg: '#E8F5E9', color: '#2E7D32' }
-    }
-  }
+
 
   return (
     <StyledDialog

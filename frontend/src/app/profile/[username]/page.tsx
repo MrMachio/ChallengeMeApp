@@ -48,6 +48,7 @@ import { friendsApi, notificationsApi } from '@/lib/api/friends'
 import type { User, FriendRequest } from '@/lib/api/friends'
 import UsersFilters from '@/components/UsersFilters'
 import type { UserSortConfig, UserSortField, UserFilterType } from '@/app/users/page'
+import { TextFieldStyled } from '@/components/Filters/styledWrappers'
 
 interface ProfileProps {
   params: {
@@ -65,10 +66,12 @@ const StyledTab = styled(Tab)(({ theme }) => ({
 }))
 
 const AnimatedToggleButton = styled(Button)(({ theme }) => ({
-  borderRadius: '25px',
-  minWidth: '140px',
-  height: '50px',
-  fontWeight: theme.typography.fontWeightMedium,
+  borderRadius: '16px',
+  minWidth: '100px',
+  height: '36px',
+  fontSize: '0.875rem',
+  fontWeight: 500,
+  textTransform: 'lowercase',
   transition: 'all 0.3s ease-in-out',
   background: 'linear-gradient(45deg, #9c27b0 30%, #d81b60 90%)',
   color: 'white',
@@ -174,12 +177,24 @@ export default function Profile({ params }: ProfileProps) {
     
     window.addEventListener('userUpdated', handleUserUpdate)
     window.addEventListener('challengeReceived', handleChallengeReceived)
+    window.addEventListener('challengeStatusChanged', (e: any) => {
+      handleChallengeStatusChange(e.detail.challengeId, e.detail.newStatus)
+    })
+    window.addEventListener('challengeFavoriteToggled', (e: any) => {
+      handleToggleFavorite(e.detail.challengeId, e.detail.isFavorite)
+    })
     
     return () => {
       window.removeEventListener('userUpdated', handleUserUpdate)
       window.removeEventListener('challengeReceived', handleChallengeReceived)
+      window.removeEventListener('challengeStatusChanged', (e: any) => {
+        handleChallengeStatusChange(e.detail.challengeId, e.detail.newStatus)
+      })
+      window.removeEventListener('challengeFavoriteToggled', (e: any) => {
+        handleToggleFavorite(e.detail.challengeId, e.detail.isFavorite)
+      })
     }
-  }, [params.username])
+  }, [params.username, currentUser])
 
   // Handle friend request actions
   const handleAcceptFriendRequest = async (requestId: string) => {
@@ -188,13 +203,18 @@ export default function Profile({ params }: ProfileProps) {
     try {
       const result = await friendsApi.acceptFriendRequest(requestId, currentUser.id)
       if (result.success) {
-        // Reload friends data
-        const [friendsData, requestsData] = await Promise.all([
-          friendsApi.getFriends(currentUser.id),
-          friendsApi.getPendingRequests(currentUser.id)
-        ])
-        setUserFriends(friendsData)
-        setFriendRequests(requestsData)
+        // Update state locally without reloading
+        const acceptedRequest = friendRequests.received.find(r => r.id === requestId)
+        if (acceptedRequest) {
+          const newFriend = Object.values(mockUsers).find(u => u.id === acceptedRequest.senderId)
+          if (newFriend) {
+            setUserFriends(prev => [...prev, newFriend])
+            setFriendRequests(prev => ({
+              ...prev,
+              received: prev.received.filter(r => r.id !== requestId)
+            }))
+          }
+        }
       }
     } catch (error) {
       console.error('Error accepting friend request:', error)
@@ -207,9 +227,11 @@ export default function Profile({ params }: ProfileProps) {
     try {
       const result = await friendsApi.rejectFriendRequest(requestId, currentUser.id)
       if (result.success) {
-        // Reload requests data
-        const requestsData = await friendsApi.getPendingRequests(currentUser.id)
-        setFriendRequests(requestsData)
+        // Update state locally without reloading
+        setFriendRequests(prev => ({
+          ...prev,
+          received: prev.received.filter(r => r.id !== requestId)
+        }))
       }
     } catch (error) {
       console.error('Error rejecting friend request:', error)
@@ -222,9 +244,8 @@ export default function Profile({ params }: ProfileProps) {
     try {
       const result = await friendsApi.removeFriend(currentUser.id, friendId)
       if (result.success) {
-        // Reload friends data
-        const friendsData = await friendsApi.getFriends(currentUser.id)
-        setUserFriends(friendsData)
+        // Update state locally without reloading
+        setUserFriends(prev => prev.filter(friend => friend.id !== friendId))
         return Promise.resolve()
       } else {
         throw new Error(result.message || 'Failed to remove friend')
@@ -245,6 +266,58 @@ export default function Profile({ params }: ProfileProps) {
 
   const handleToggleViewMode = () => {
     setViewMode(viewMode === 'challenges' ? 'friends' : 'challenges')
+  }
+
+  // Handle challenge status changes without page reload
+  const handleChallengeStatusChange = (challengeId: string, newStatus: string) => {
+    setUserChallenges(prev => {
+      const newChallenges = { ...prev }
+      
+      // Remove from all categories
+      Object.keys(newChallenges).forEach(key => {
+        newChallenges[key as keyof typeof newChallenges] = newChallenges[key as keyof typeof newChallenges].filter(c => c.id !== challengeId)
+      })
+      
+      // Add to new category
+      const challenge = mockChallenges.find(c => c.id === challengeId)
+      if (challenge) {
+        switch (newStatus) {
+          case 'active':
+            newChallenges.active.push(challenge)
+            break
+          case 'completed':
+            newChallenges.completed.push(challenge)
+            break
+          case 'pending':
+            newChallenges.pending.push(challenge)
+            break
+        }
+      }
+      
+      return newChallenges
+    })
+  }
+
+  // Handle favorites toggle without page reload
+  const handleToggleFavorite = (challengeId: string, isFavorite: boolean) => {
+    setUserChallenges(prev => {
+      const challenge = mockChallenges.find(c => c.id === challengeId)
+      if (!challenge) return prev
+      
+      const newChallenges = { ...prev }
+      
+      if (isFavorite) {
+        // Add to favorites if not already there
+        if (!newChallenges.favorites.some(c => c.id === challengeId)) {
+          newChallenges.favorites.push(challenge)
+        }
+      } else {
+        // Remove from favorites
+        newChallenges.favorites = newChallenges.favorites.filter(c => c.id !== challengeId)
+      }
+      
+      return newChallenges
+    })
   }
 
   const handleChangeProfilePicture = () => {
@@ -343,16 +416,59 @@ export default function Profile({ params }: ProfileProps) {
   if (isLoading) {
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Paper sx={{ borderRadius: 4, p: 4, mb: 4 }}>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Avatar sx={{ width: 100, height: 100 }} />
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h4" component="h1" sx={{ mb: 1 }}>
-                Loading...
-              </Typography>
+        {/* Header Skeleton */}
+        <Paper sx={{ borderRadius: 4, p: 3, position: 'relative' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pr: 6 }}>
+            <Avatar sx={{ width: 60, height: 60, bgcolor: 'grey.300' }} />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ 
+                height: 20, 
+                bgcolor: 'grey.300', 
+                borderRadius: 1, 
+                mb: 0.5, 
+                width: '120px' 
+              }} />
+              <Box sx={{ 
+                height: 16, 
+                bgcolor: 'grey.200', 
+                borderRadius: 1, 
+                mb: 1, 
+                width: '100px' 
+              }} />
+              <Box sx={{ 
+                height: 24, 
+                bgcolor: 'warning.light', 
+                borderRadius: '12px', 
+                width: '80px' 
+              }} />
             </Box>
           </Box>
+          <Box sx={{ position: 'absolute', top: 12, right: 12 }}>
+            <Box sx={{ width: 48, height: 48, bgcolor: 'grey.300', borderRadius: '50%' }} />
+          </Box>
         </Paper>
+
+        {/* Tabs Skeleton */}
+        <Box sx={{ mt: 4, mb: 4 }}>
+          <Box sx={{ height: '56px', position: 'relative' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%' }}>
+              <Box sx={{ minWidth: 300, height: 40, bgcolor: 'grey.300', borderRadius: '20px' }} />
+              <Box sx={{ flex: 1, display: 'flex', gap: 2 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Box key={i} sx={{ 
+                    height: 32, 
+                    width: 80, 
+                    bgcolor: 'grey.300', 
+                    borderRadius: 1 
+                  }} />
+                ))}
+              </Box>
+              <Box sx={{ width: 100, height: 36, bgcolor: 'primary.light', borderRadius: '18px' }} />
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Content Skeleton */}
         <Grid container spacing={3}>
           {skeletonCards}
         </Grid>
@@ -368,10 +484,89 @@ export default function Profile({ params }: ProfileProps) {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* Header with Menu Button */}
-      <Paper sx={{ borderRadius: 4, p: 3, mb: 4, position: 'relative' }}>
-        {/* Menu Button in top-left corner */}
-        <Box sx={{ position: 'absolute', top: 12, left: 12 }}>
+      {/* Header with User Info and Menu Button */}
+      <Paper 
+        sx={{ 
+          borderRadius: 4, 
+          p: 3, 
+          position: 'relative',
+          '& > *:not(:last-child)': {
+            zIndex: 0
+          }
+        }}
+      >
+        {/* User Info on left */}
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5, 
+            pr: 6,
+            position: 'relative',
+            zIndex: 0
+          }}
+        >
+          <Avatar
+            src={user.avatarUrl || '/images/avatars/default.svg'}
+            alt={user.username}
+            sx={{ 
+              width: 60, 
+              height: 60,
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'scale(1.05)'
+              }
+            }}
+          />
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <Typography 
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: 'text.primary',
+                fontSize: '1.1rem',
+                lineHeight: 1.2,
+                mb: 0.25
+              }}
+            >
+              {user.username}
+            </Typography>
+            {user.fullName && (
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{ 
+                  fontWeight: 500,
+                  fontSize: '0.9rem',
+                  lineHeight: 1.2,
+                  mb: 1
+                }}
+              >
+                {user.fullName}
+              </Typography>
+            )}
+            <Chip
+              icon={<EmojiEventsIcon sx={{ fontSize: '14px' }} />}
+              label={`${user.points} points`}
+              size="small"
+              sx={{
+                bgcolor: '#F59E0B',
+                color: 'white',
+                fontSize: '0.7rem',
+                fontWeight: 500,
+                height: '24px',
+                width: 'fit-content',
+                '& .MuiChip-icon': {
+                  color: 'white'
+                }
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Menu Button in top-right corner */}
+        <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
           <IconButton 
             onClick={() => setDrawerOpen(true)}
             size="large"
@@ -382,6 +577,7 @@ export default function Profile({ params }: ProfileProps) {
                 backgroundColor: 'action.hover'
               }
             }}
+            data-testid="profile-menu-button"
           >
             <MenuIcon />
           </IconButton>
@@ -405,123 +601,172 @@ export default function Profile({ params }: ProfileProps) {
             </Button>
           </Box>
         )}
-
-        {/* Main Content Area */}
-        <Box sx={{ pt: 6 }}>
-          {/* Search Bar */}
-          <Box sx={{ mb: 3 }}>
-            <TextField
-              fullWidth
-              placeholder={viewMode === 'challenges' ? 'Search challenges...' : 'Search users...'}
-              value={viewMode === 'challenges' ? challengeSearch : userSearch}
-              onChange={(e) => viewMode === 'challenges' ? setChallengeSearch(e.target.value) : setUserSearch(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-              }}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '25px',
-                  backgroundColor: 'background.paper',
-                }
-              }}
-            />
-          </Box>
-
-          {/* Animated Content Container */}
-          <Box sx={{ position: 'relative', overflow: 'hidden', minHeight: '60px' }}>
-            {/* Challenges View */}
-            <Slide direction="right" in={viewMode === 'challenges'} mountOnEnter unmountOnExit>
-              <Box sx={{ position: viewMode === 'challenges' ? 'static' : 'absolute', width: '100%' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  {/* Challenge Tabs */}
-                  <Box sx={{ flex: 1 }}>
-                    <Tabs 
-                      value={challengeTab} 
-                      onChange={handleChallengeTabChange}
-                      variant="scrollable"
-                      scrollButtons="auto"
-                      sx={{
-                        '& .MuiTabs-indicator': {
-                          backgroundColor: 'primary.main',
-                        }
-                      }}
-                    >
-                      <StyledTab label="Active Challenges" />
-                      <StyledTab label="Pending Approval" />
-                      <StyledTab label="Completed Challenges" />
-                      <StyledTab label="Created Challenges" />
-                      <StyledTab label="Favorites" />
-                      <StyledTab label="Received Challenges" />
-                    </Tabs>
-                  </Box>
-                  
-                  {/* Toggle Button */}
-                  <AnimatedToggleButton
-                    onClick={handleToggleViewMode}
-                    endIcon={<ArrowForwardIcon />}
-                  >
-                    Friends
-                  </AnimatedToggleButton>
-                </Box>
-              </Box>
-            </Slide>
-
-            {/* Friends View */}
-            <Slide direction="left" in={viewMode === 'friends'} mountOnEnter unmountOnExit>
-              <Box sx={{ position: viewMode === 'friends' ? 'static' : 'absolute', width: '100%' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                  {/* Toggle Button */}
-                  <AnimatedToggleButton
-                    onClick={handleToggleViewMode}
-                    startIcon={<ArrowBackIcon />}
-                  >
-                    Challenges
-                  </AnimatedToggleButton>
-
-                  {/* User Filters */}
-                  <Box sx={{ flex: 1 }}>
-                    <UsersFilters
-                      searchQuery={userSearch}
-                      setSearchQuery={setUserSearch}
-                      filterType={userFilterType}
-                      setFilterType={setUserFilterType}
-                      sortConfig={userSortConfig}
-                      setSortConfig={setUserSortConfig}
-                      hideFilterSelect={true}
-                    />
-                  </Box>
-                  
-                  {/* Friends Tabs */}
-                  <Box>
-                    <Tabs 
-                      value={usersTab} 
-                      onChange={handleUsersTabChange}
-                      sx={{
-                        '& .MuiTabs-indicator': {
-                          backgroundColor: 'primary.main',
-                        }
-                      }}
-                    >
-                      <Tab 
-                        label={`FRIENDS (${userFriends.length})`}
-                        data-testid="friends-tab"
-                      />
-                      <Tab 
-                        label={`REQUESTS (${friendRequests.received.length})`}
-                        data-testid="friend-requests-tab"
-                      />
-                    </Tabs>
-                  </Box>
-                </Box>
-              </Box>
-            </Slide>
-          </Box>
-        </Box>
       </Paper>
+
+      {/* Tabs Section */}
+      <Box sx={{ mt: 4, mb: 4 }}>
+        {/* Animated Content Container */}
+        <Box sx={{ 
+          position: 'relative', 
+          overflow: 'hidden', 
+          height: '56px', 
+          zIndex: 1
+        }}>
+          {/* Challenges View */}
+          <Slide direction="right" in={viewMode === 'challenges'} mountOnEnter unmountOnExit>
+            <Box sx={{ 
+              position: viewMode === 'challenges' ? 'static' : 'absolute', 
+              width: '100%', 
+              height: '56px',
+              top: 0, 
+              left: 0,
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              overflow: 'visible'
+            }}>
+                {/* Search Bar for Challenges */}
+                <Box sx={{ minWidth: 300 }}>
+                  <TextFieldStyled
+                    placeholder="Search challenges..."
+                    size="small"
+                    value={challengeSearch}
+                    onChange={(e) => setChallengeSearch(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon sx={{ color: 'text.secondary' }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: challengeSearch ? (
+                        <InputAdornment 
+                          position="end" 
+                          onClick={() => setChallengeSearch('')}
+                          sx={{ 
+                            cursor: 'pointer',
+                            '&:hover': {
+                              '& .MuiSvgIcon-root': {
+                                color: 'text.primary'
+                              }
+                            }
+                          }}
+                        >
+                          <CloseIcon sx={{ color: 'text.secondary' }} />
+                        </InputAdornment>
+                      ) : null
+                    }}
+                    data-testid="challenges-search-bar"
+                  />
+                </Box>
+
+                {/* Challenge Tabs */}
+                <Box sx={{ flex: 1 }}>
+                  <Tabs 
+                    value={challengeTab} 
+                    onChange={handleChallengeTabChange}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{
+                      '& .MuiTabs-indicator': {
+                        backgroundColor: 'primary.main',
+                      }
+                    }}
+                  >
+                    <StyledTab label="Active" />
+                    <StyledTab label="Pending" />
+                    <StyledTab label="Completed" />
+                    <StyledTab label="Created" />
+                    <StyledTab label="Favorites" />
+                    <StyledTab label="Received" />
+                  </Tabs>
+                </Box>
+                
+                {/* Toggle Button */}
+                <AnimatedToggleButton
+                  size="small"
+                  onClick={handleToggleViewMode}
+                  endIcon={<ArrowForwardIcon />}
+                >
+                  friends
+                </AnimatedToggleButton>
+            </Box>
+          </Slide>
+
+          {/* Friends View */}
+          <Slide direction="left" in={viewMode === 'friends'} mountOnEnter unmountOnExit>
+            <Box sx={{ 
+              position: viewMode === 'friends' ? 'static' : 'absolute', 
+              width: '100%', 
+              height: '56px',
+              top: 0, 
+              left: 0,
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 2,
+              overflow: 'visible'
+            }}>
+                {/* Toggle Button */}
+                <AnimatedToggleButton
+                  size="small"
+                  onClick={handleToggleViewMode}
+                  startIcon={<ArrowBackIcon />}
+                >
+                  challenges
+                </AnimatedToggleButton>
+
+                {/* User Filters */}
+                <Box sx={{ 
+                  flex: 1, 
+                  minWidth: 0, 
+                  zIndex: 2,
+                  position: 'relative',
+                  overflow: 'visible',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: '-10px',
+                    left: 0,
+                    right: 0,
+                    height: '10px',
+                    zIndex: -1
+                  }
+                }}>
+                  <UsersFilters
+                    searchQuery={userSearch}
+                    setSearchQuery={setUserSearch}
+                    filterType={userFilterType}
+                    setFilterType={setUserFilterType}
+                    sortConfig={userSortConfig}
+                    setSortConfig={setUserSortConfig}
+                    hideFilterSelect={true}
+                  />
+                </Box>
+
+                {/* Friends Tabs */}
+                <Box>
+                  <Tabs 
+                    value={usersTab} 
+                    onChange={handleUsersTabChange}
+                    sx={{
+                      '& .MuiTabs-indicator': {
+                        backgroundColor: 'primary.main',
+                      }
+                    }}
+                  >
+                    <Tab 
+                      label={`FRIENDS (${userFriends.length})`}
+                      data-testid="friends-tab"
+                    />
+                    <Tab 
+                      label={`REQUESTS (${friendRequests.received.length})`}
+                      data-testid="friend-requests-tab"
+                    />
+                  </Tabs>
+                </Box>
+              </Box>
+          </Slide>
+        </Box>
+      </Box>
 
       {/* Content Area */}
       {viewMode === 'challenges' ? (
@@ -553,12 +798,12 @@ export default function Profile({ params }: ProfileProps) {
                 No challenges found
               </Typography>
               <Typography color="text.secondary">
-                {challengeTab === 0 && 'No active challenges at the moment.'}
-                {challengeTab === 1 && 'No challenges pending approval.'}
-                {challengeTab === 2 && 'No completed challenges yet.'}
-                {challengeTab === 3 && 'No created challenges yet.'}
-                {challengeTab === 4 && 'No favorite challenges yet.'}
-                {challengeTab === 5 && 'No received challenges yet.'}
+                {challengeTab === 0 && 'No active items at the moment.'}
+                {challengeTab === 1 && 'No items pending approval.'}
+                {challengeTab === 2 && 'No completed items yet.'}
+                {challengeTab === 3 && 'No created items yet.'}
+                {challengeTab === 4 && 'No favorite items yet.'}
+                {challengeTab === 5 && 'No received items yet.'}
               </Typography>
             </Box>
           )}
@@ -632,15 +877,16 @@ export default function Profile({ params }: ProfileProps) {
 
       {/* Side Drawer */}
       <Drawer
-        anchor="left"
+        anchor="right"
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         PaperProps={{
           sx: {
             width: 320,
             p: 3,
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white'
+            backgroundColor: 'background.paper',
+            borderLeft: '1px solid',
+            borderColor: 'divider'
           }
         }}
       >
@@ -648,55 +894,62 @@ export default function Profile({ params }: ProfileProps) {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <IconButton 
             onClick={() => setDrawerOpen(false)}
-            sx={{ color: 'white' }}
+            sx={{ 
+              color: 'text.secondary',
+              '&:hover': {
+                backgroundColor: 'action.hover'
+              }
+            }}
           >
             <CloseIcon />
           </IconButton>
         </Box>
 
         {/* User Info */}
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
           <Avatar
             src={user.avatarUrl || '/images/avatars/default.svg'}
             alt={user.username}
             sx={{ 
               width: 100, 
-              height: 100, 
-              mx: 'auto', 
-              mb: 2,
-              border: '4px solid rgba(255,255,255,0.3)'
+              height: 100
             }}
           />
-          <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold' }}>
-            {user.username}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 2, opacity: 0.9 }}>
-            {user.fullName}
-          </Typography>
-          <Chip
-            icon={<EmojiEventsIcon />}
-            label={`${user.points} points`}
-            sx={{ 
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontWeight: 'bold'
-            }}
-          />
+          <Box>
+            <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary' }}>
+              {user.username}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
+              {user.fullName}
+            </Typography>
+            <Chip
+              icon={<EmojiEventsIcon sx={{ fontSize: '16px' }} />}
+              label={`${user.points} points`}
+              sx={{
+                bgcolor: '#F59E0B',
+                color: 'white',
+                fontWeight: 'bold',
+                '& .MuiChip-icon': {
+                  color: 'white'
+                }
+              }}
+            />
+          </Box>
         </Box>
 
         {/* Edit Options for Current User */}
         {isCurrentUser && (
           <>
-            <Divider sx={{ my: 2, backgroundColor: 'rgba(255,255,255,0.3)' }} />
+            <Divider sx={{ my: 2 }} />
             <Stack spacing={1} sx={{ mb: 4 }}>
               <Button
                 fullWidth
                 startIcon={<PhotoCameraIcon />}
                 onClick={handleChangeProfilePicture}
                 sx={{ 
-                  color: 'white', 
+                  color: 'text.primary', 
                   justifyContent: 'flex-start',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
                 Change Profile Picture
@@ -706,9 +959,9 @@ export default function Profile({ params }: ProfileProps) {
                 startIcon={<PersonIcon />}
                 onClick={handleChangeFullName}
                 sx={{ 
-                  color: 'white', 
+                  color: 'text.primary', 
                   justifyContent: 'flex-start',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
                 Edit Full Name
@@ -718,9 +971,9 @@ export default function Profile({ params }: ProfileProps) {
                 startIcon={<EditIcon />}
                 onClick={handleChangeUsername}
                 sx={{ 
-                  color: 'white', 
+                  color: 'text.primary', 
                   justifyContent: 'flex-start',
-                  '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' }
+                  '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
                 Edit Username
@@ -730,52 +983,52 @@ export default function Profile({ params }: ProfileProps) {
         )}
 
         {/* Statistics */}
-        <Divider sx={{ my: 2, backgroundColor: 'rgba(255,255,255,0.3)' }} />
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.primary' }}>
           Statistics
         </Typography>
         <Stack spacing={2}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <GroupIcon />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Active</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Active:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
                 {userChallenges.active.length}
               </Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <EmojiEventsIcon />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Completed</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Completed:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
                 {userChallenges.completed.length}
               </Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <CreateIcon />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Created</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Created:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
                 {userChallenges.created.length}
               </Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <BookmarkIcon />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Favorites</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Favorites:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
                 {userChallenges.favorites.length}
               </Typography>
             </Box>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <SendIcon />
-            <Box>
-              <Typography variant="body2" sx={{ opacity: 0.8 }}>Received</Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Received:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
                 {userChallenges.received.length}
               </Typography>
             </Box>

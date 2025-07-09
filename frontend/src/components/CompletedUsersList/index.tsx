@@ -142,7 +142,7 @@ export default function CompletedUsersList({
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image')
   const [localRatings, setLocalRatings] = useState<Record<string, { userRatings: Record<string, number>, averageRating: number }>>({})
   
-  // Получаем текущего пользователя
+  // Get current user
   const { user: currentUser } = useAuth()
 
   const isCreator = currentUser?.id === challengeCreatorId
