@@ -44,6 +44,7 @@ interface UsersFiltersProps {
   setFilterType: (value: UserFilterType) => void;
   sortConfig: UserSortConfig;
   setSortConfig: (value: UserSortConfig) => void;
+  hideFilterSelect?: boolean; // Optional prop to hide filter select
 }
 
 const FILTER_OPTIONS: { value: UserFilterType; label: string }[] = [
@@ -57,7 +58,8 @@ export default function UsersFilters({
   filterType,
   setFilterType,
   sortConfig,
-  setSortConfig
+  setSortConfig,
+  hideFilterSelect = false
 }: UsersFiltersProps) {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
@@ -104,19 +106,23 @@ export default function UsersFilters({
   return (
     <Stack
       className='UsersFiltersWrapper'
-      direction={{ xs: 'column', sm: 'row' }}
-      gap='8px'
+      direction="row"
+      gap={1}
       sx={{
         width: '100%',
-        alignItems: { xs: 'stretch', sm: 'center' },
-        justifyContent: 'space-between'
+        alignItems: 'center',
+        position: 'relative',
+        overflow: 'visible',
+        minHeight: '56px' // Ensure enough height for InputLabel
       }}
     >
       <TextFieldStyled
-        placeholder="Search users by name or username..."
+        placeholder="Search users..."
         className='SearchField'
+        size="small"
         value={searchQuery}
         onChange={handleSearchChange}
+        sx={{ flex: 1 }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
@@ -142,17 +148,11 @@ export default function UsersFilters({
         }}
       />
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        gap='8px'
-        sx={{
-          flex: { xs: '1 1 100%', sm: '0 1 auto' },
-          minWidth: { xs: '100%', sm: 'auto' }
-        }}
-      >
+{!hideFilterSelect && (
         <FormControl
+          size="small"
           sx={{
-            minWidth: { xs: '100%', sm: 150 }
+            minWidth: 120
           }}
         >
           <InputLabel>Filter</InputLabel>
@@ -172,43 +172,58 @@ export default function UsersFilters({
             ))}
           </Select>
         </FormControl>
+      )}
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <FormControl
+      <FormControl
+        size="small"
+        sx={{
+          minWidth: 120,
+          position: 'relative',
+          zIndex: 1200, // Add higher z-index for dropdown
+          '& .MuiSelect-root': {
+            zIndex: 1200
+          },
+          '& .MuiPopover-root': {
+            zIndex: 1300
+          },
+          '& .MuiInputLabel-root': {
+            zIndex: 1200
+          },
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderRadius: '100px'
+            }
+          }
+        }}
+      >
+        <InputLabel>Sort</InputLabel>
+        <Select
+          value={sortConfig.field}
+          label="Sort"
+          onChange={handleSortFieldChange}
+          sx={{
+            borderRadius: '100px',
+            backgroundColor: 'background.paper'
+          }}
+        >
+          <MenuItem value="none">None</MenuItem>
+          <MenuItem value="points">Points</MenuItem>
+          <MenuItem value="completedChallenges">Completed</MenuItem>
+        </Select>
+      </FormControl>
+      
+      {sortConfig.field !== 'none' && (
+        <Tooltip title={sortConfig.direction === 'desc' ? "Sort Descending" : "Sort Ascending"}>
+          <IconButton
+            onClick={toggleSortDirection}
             sx={{
-              minWidth: { xs: '100%', sm: 180 }
+              animation: `${sortConfig.direction === 'desc' ? rotateDown : rotateUp} 0.2s forwards`,
             }}
           >
-            <InputLabel>Sort by</InputLabel>
-            <Select
-              value={sortConfig.field}
-              label="Sort by"
-              onChange={handleSortFieldChange}
-              sx={{
-                borderRadius: '100px',
-                backgroundColor: 'background.paper'
-              }}
-            >
-              <MenuItem value="none">No Sorting</MenuItem>
-              <MenuItem value="points">By Points</MenuItem>
-              <MenuItem value="completedChallenges">By Completed Challenges</MenuItem>
-            </Select>
-          </FormControl>
-          
-          {sortConfig.field !== 'none' && (
-            <Tooltip title={sortConfig.direction === 'desc' ? "Sort Descending" : "Sort Ascending"}>
-              <IconButton
-                onClick={toggleSortDirection}
-                sx={{
-                  animation: `${sortConfig.direction === 'desc' ? rotateDown : rotateUp} 0.2s forwards`,
-                }}
-              >
-                <ArrowUpwardIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      </Stack>
+            <ArrowUpwardIcon />
+          </IconButton>
+        </Tooltip>
+      )}
     </Stack>
   )
 } 

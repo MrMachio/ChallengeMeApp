@@ -27,6 +27,7 @@ import ChallengeModal from '../ChallengeModal'
 import { mockChallengeLikes, mockCompletions, mockUsers } from '@/lib/mock/data'
 import { useAuth } from '@/lib/providers/AuthProvider'
 import { challengesApi } from '@/lib/api/challenges'
+import { getDifficultyColor } from '@/lib/utils'
 
 export interface ChallengeCardProps {
   challenge: {
@@ -47,9 +48,10 @@ export interface ChallengeCardProps {
     }
     createdAt: string
   }
+  disableInteractions?: boolean
 }
 
-// Компонент скелетона для загрузки
+// Skeleton component for loading
 export function ChallengeCardSkeleton() {
   return (
     <Card 
@@ -131,7 +133,7 @@ export function ChallengeCardSkeleton() {
   )
 }
 
-export default function ChallengeCard({ challenge }: ChallengeCardProps) {
+export default function ChallengeCard({ challenge, disableInteractions = false }: ChallengeCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
   const [completionsCount, setCompletionsCount] = useState(0)
@@ -139,7 +141,7 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const [isBookmarked, setIsBookmarked] = useState(false)
   const { user } = useAuth()
 
-  // Обновляем состояние лайков, избранного и количество выполнивших
+  // Update likes, favorites state and completion count
   const updateCounts = () => {
     const likes = mockChallengeLikes[challenge.id] || [];
     const userLiked = user ? likes.includes(user.id) : false;
@@ -149,21 +151,21 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     const completions = mockCompletions[challenge.id] || [];
     setCompletionsCount(completions.length);
 
-    // Проверяем, добавлена ли задача в избранные
+    // Check if challenge is bookmarked
     const userBookmarked = user ? user.favoritesChallenges.includes(challenge.id) : false;
     setIsBookmarked(userBookmarked);
   }
 
   useEffect(() => {
     updateCounts();
-  }, [challenge.id, modalOpen]); // Обновляем при открытии/закрытии модального окна
+  }, [challenge.id, modalOpen]); // Update when modal opens/closes
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
     
-    if (!user) return;
+    if (!user || disableInteractions) return;
     
-    // Уменьшаем задержку до 100-200мс
+    // Reduce delay to 100-200ms
     setTimeout(() => {
       const likes = mockChallengeLikes[challenge.id] || [];
       if (!isLiked) {
@@ -171,14 +173,14 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
       } else {
         mockChallengeLikes[challenge.id] = likes.filter(id => id !== user.id);
       }
-      updateCounts(); // Обновляем состояние сразу после изменения
+      updateCounts(); // Update state immediately after change
     }, Math.random() * 100 + 100);
   }
 
   const handleBookmark = async (e: React.MouseEvent) => {
     e.stopPropagation()
     
-    if (!user) return;
+    if (!user || disableInteractions) return;
     
     try {
       const response = await challengesApi.toggleFavorite(challenge.id);
@@ -192,23 +194,12 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     }
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch(difficulty.toLowerCase()) {
-      case 'easy':
-        return { bg: '#E8F5E9', color: '#2E7D32' }
-      case 'medium':
-        return { bg: '#FFF3E0', color: '#E65100' }
-      case 'hard':
-        return { bg: '#FFEBEE', color: '#C62828' }
-      default:
-        return { bg: '#E8F5E9', color: '#2E7D32' }
-    }
-  }
+
 
   return (
     <>
       <Card 
-        onClick={() => setModalOpen(true)}
+        onClick={() => !disableInteractions && setModalOpen(true)}
         sx={{ 
           height: '100%', 
           display: 'flex', 
@@ -218,12 +209,12 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           bgcolor: 'background.paper',
-          cursor: 'pointer',
+          cursor: disableInteractions ? 'default' : 'pointer',
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
+            transform: disableInteractions ? 'none' : 'translateY(-4px)',
+            boxShadow: disableInteractions ? '0 4px 20px rgba(0, 0, 0, 0.05)' : '0 8px 25px rgba(0, 0, 0, 0.1)',
             '& img': {
-              transform: 'scale(1.1)'
+              transform: disableInteractions ? 'none' : 'scale(1.1)'
             }
           }
         }}
@@ -368,16 +359,20 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
                 <IconButton
                   onClick={handleLike}
                   size="small"
+                  disabled={disableInteractions}
                   sx={{ 
                     p: 0,
                     color: '#9CA3AF',
-                    '&:hover': {
+                    '&:hover': !disableInteractions ? {
                       color: '#F87171'
+                    } : {},
+                    '&.Mui-disabled': {
+                      color: '#9CA3AF'
                     }
                   }}
                 >
                   {isLiked ? (
-                    <FavoriteIcon sx={{ fontSize: 20, color: '#F87171' }} />
+                    <FavoriteIcon sx={{ fontSize: 20, color: disableInteractions ? '#9CA3AF' : '#F87171' }} />
                   ) : (
                     <FavoriteBorderIcon sx={{ fontSize: 20 }} />
                   )}
@@ -397,16 +392,20 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
                 <IconButton
                   onClick={handleBookmark}
                   size="small"
+                  disabled={disableInteractions}
                   sx={{ 
                     p: 0,
                     color: '#9CA3AF',
-                    '&:hover': {
+                    '&:hover': !disableInteractions ? {
                       color: '#FFD700'
+                    } : {},
+                    '&.Mui-disabled': {
+                      color: '#9CA3AF'
                     }
                   }}
                 >
                   {isBookmarked ? (
-                    <BookmarkIcon sx={{ fontSize: 20, color: '#FFD700' }} />
+                    <BookmarkIcon sx={{ fontSize: 20, color: disableInteractions ? '#9CA3AF' : '#FFD700' }} />
                   ) : (
                     <BookmarkBorderIcon sx={{ fontSize: 20 }} />
                   )}
@@ -441,11 +440,13 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
         </CardContent>
       </Card>
 
-      <ChallengeModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        challenge={challenge}
-      />
+      {!disableInteractions && (
+        <ChallengeModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          challenge={challenge}
+        />
+      )}
     </>
   )
 } 

@@ -9,13 +9,64 @@ interface User {
   activeChallenges: string[];
   pendingChallenges: string[]; // Challenges waiting for creator approval
   favoritesChallenges: string[]; // Favorite challenges bookmarked by user
+  receivedChallenges: string[]; // Challenges received from other users via chat
   fullName?: string;
   followers?: number;
   following?: number;
+  friends?: string[]; // Array of user IDs who are friends
+  friendRequests?: {
+    sent: string[]; // Friend requests sent by this user
+    received: string[]; // Friend requests received by this user
+  };
+  lastSeen?: string; // Last time user was online
+  isOnline?: boolean; // Current online status
 }
 
 interface UserMap {
   [key: string]: User;
+}
+
+// Message interface for chat system
+interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  type: 'text' | 'challenge'; // Type of message
+  challengeId?: string; // If type is challenge, this contains the challenge ID
+  timestamp: string;
+  isRead: boolean;
+}
+
+// Chat interface for user conversations
+interface Chat {
+  id: string;
+  participants: string[]; // Array of 2 user IDs
+  messages: Message[];
+  lastMessage?: Message;
+  unreadCount: number;
+  createdAt: string;
+}
+
+// Friend request interface
+interface FriendRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+}
+
+// Notification interface
+interface Notification {
+  id: string;
+  userId: string;
+  type: 'friend_request' | 'friend_accepted' | 'message' | 'challenge_shared';
+  fromUserId: string;
+  content: string;
+  isRead: boolean;
+  createdAt: string;
+  data?: any; // Additional data based on notification type
 }
 
 export const mockUsers: UserMap = {
@@ -31,8 +82,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['3', '5', '9'],
     pendingChallenges: [],
     favoritesChallenges: ['10', '11', '12'],
+    receivedChallenges: [], // Received from other users via chat
     followers: 120,
-    following: 85
+    following: 85,
+    friends: ['user2', 'user3', 'user5'],
+    friendRequests: {
+      sent: ['user7'],
+      received: ['user4', 'user6']
+    },
+    lastSeen: new Date().toISOString(),
+    isOnline: true
   },
   'user2': {
     id: 'user2',
@@ -46,8 +105,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['4'],
     pendingChallenges: [],
     favoritesChallenges: ['3', '7', '9'],
+    receivedChallenges: [],
     followers: 75,
-    following: 50
+    following: 50,
+    friends: ['user1', 'user3', 'user4'],
+    friendRequests: {
+      sent: ['user8'],
+      received: ['user9']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+    isOnline: false
   },
   'user3': {
     id: 'user3',
@@ -61,8 +128,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['5', '6'],
     pendingChallenges: [],
     favoritesChallenges: ['2', '8', '10'],
+    receivedChallenges: [],
     followers: 250,
-    following: 120
+    following: 120,
+    friends: ['user1', 'user2', 'user5'],
+    friendRequests: {
+      sent: ['user4'],
+      received: ['user10']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
+    isOnline: false
   },
   'user4': {
     id: 'user4',
@@ -76,8 +151,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['1', '2'],
     pendingChallenges: [],
     favoritesChallenges: ['5', '9', '11'],
+    receivedChallenges: [],
     followers: 95,
-    following: 88
+    following: 88,
+    friends: ['user2', 'user6'],
+    friendRequests: {
+      sent: ['user1'],
+      received: ['user3']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
+    isOnline: false
   },
   'user5': {
     id: 'user5',
@@ -91,8 +174,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['2', '6'],
     pendingChallenges: [],
     favoritesChallenges: ['1', '4', '8'],
+    receivedChallenges: [],
     followers: 180,
-    following: 95
+    following: 95,
+    friends: ['user1', 'user3', 'user7'],
+    friendRequests: {
+      sent: ['user6'],
+      received: ['user8']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
+    isOnline: true
   },
   'user6': {
     id: 'user6',
@@ -106,8 +197,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['7', '9'],
     pendingChallenges: [],
     favoritesChallenges: ['1', '3', '10'],
+    receivedChallenges: [],
     followers: 65,
-    following: 42
+    following: 42,
+    friends: ['user4', 'user8'],
+    friendRequests: {
+      sent: ['user1'],
+      received: ['user5']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
+    isOnline: false
   },
   'user7': {
     id: 'user7',
@@ -121,8 +220,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['8', '10'],
     pendingChallenges: [],
     favoritesChallenges: ['2', '4', '11'],
+    receivedChallenges: [],
     followers: 195,
-    following: 88
+    following: 88,
+    friends: ['user5', 'user9'],
+    friendRequests: {
+      sent: ['user10'],
+      received: ['user1']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
+    isOnline: false
   },
   'user8': {
     id: 'user8',
@@ -136,8 +243,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['9', '11'],
     pendingChallenges: [],
     favoritesChallenges: ['1', '5', '12'],
+    receivedChallenges: [],
     followers: 280,
-    following: 150
+    following: 150,
+    friends: ['user6', 'user10'],
+    friendRequests: {
+      sent: ['user5'],
+      received: ['user2']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 minutes ago
+    isOnline: false
   },
   'user9': {
     id: 'user9',
@@ -151,8 +266,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['10', '12'],
     pendingChallenges: [],
     favoritesChallenges: ['2', '6', '13'],
+    receivedChallenges: [],
     followers: 110,
-    following: 75
+    following: 75,
+    friends: ['user7'],
+    friendRequests: {
+      sent: ['user2'],
+      received: ['user10']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 minutes ago
+    isOnline: false
   },
   'user10': {
     id: 'user10',
@@ -166,8 +289,16 @@ export const mockUsers: UserMap = {
     activeChallenges: ['11', '13'],
     pendingChallenges: [],
     favoritesChallenges: ['1', '4', '7'],
+    receivedChallenges: [],
     followers: 165,
-    following: 92
+    following: 92,
+    friends: ['user8'],
+    friendRequests: {
+      sent: ['user3', 'user9'],
+      received: ['user7']
+    },
+    lastSeen: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
+    isOnline: true
   }
 };
 
@@ -924,3 +1055,145 @@ export const verifyRatingConsistency = () => {
   
   return inconsistencies
 } 
+
+// Mock data for chats and messages
+export const mockChats: { [key: string]: Chat } = {
+  'user1-user2': {
+    id: 'user1-user2',
+    participants: ['user1', 'user2'],
+    messages: [
+      {
+        id: 'msg1',
+        senderId: 'user1',
+        receiverId: 'user2',
+        content: 'Привет! Как дела с эко-проектом?',
+        type: 'text',
+        timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg2',
+        senderId: 'user2',
+        receiverId: 'user1',
+        content: 'Отлично! Уже почти завершил. А у тебя как с кодингом?',
+        type: 'text',
+        timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg3',
+        senderId: 'user1',
+        receiverId: 'user2',
+        content: 'Попробуй это задание! Думаю, тебе понравится',
+        type: 'challenge',
+        challengeId: '3',
+        timestamp: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+        isRead: false
+      }
+    ],
+    unreadCount: 1,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
+  },
+  'user1-user3': {
+    id: 'user1-user3',
+    participants: ['user1', 'user3'],
+    messages: [
+      {
+        id: 'msg4',
+        senderId: 'user3',
+        receiverId: 'user1',
+        content: 'Привет! Видел твое последнее задание - круто!',
+        type: 'text',
+        timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+        isRead: true
+      },
+      {
+        id: 'msg5',
+        senderId: 'user1',
+        receiverId: 'user3',
+        content: 'Спасибо! Давай вместе что-то сделаем',
+        type: 'text',
+        timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        isRead: true
+      }
+    ],
+    unreadCount: 0,
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
+  }
+};
+
+// Mock data for notifications
+export const mockNotifications: { [key: string]: Notification[] } = {
+  'user1': [
+    {
+      id: 'notif1',
+      userId: 'user1',
+      type: 'friend_request',
+      fromUserId: 'user4',
+      content: 'ArtisticSoul хочет добавить вас в друзья',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+      data: { requestId: 'req1' }
+    },
+    {
+      id: 'notif2',
+      userId: 'user1',
+      type: 'friend_request',
+      fromUserId: 'user6',
+      content: 'BookWorm хочет добавить вас в друзья',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      data: { requestId: 'req2' }
+    }
+  ],
+  'user2': [
+    {
+      id: 'notif3',
+      userId: 'user2',
+      type: 'friend_request',
+      fromUserId: 'user9',
+      content: 'MusicLover хочет добавить вас в друзья',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+      data: { requestId: 'req3' }
+    },
+    {
+      id: 'notif4',
+      userId: 'user2',
+      type: 'message',
+      fromUserId: 'user1',
+      content: 'Новое сообщение от TechMaster',
+      isRead: false,
+      createdAt: new Date(Date.now() - 1000 * 60 * 20).toISOString(),
+      data: { chatId: 'user1-user2', messageId: 'msg3' }
+    }
+  ]
+};
+
+// Mock data for friend requests
+export const mockFriendRequests: FriendRequest[] = [
+  {
+    id: 'req1',
+    senderId: 'user4',
+    receiverId: 'user1',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString()
+  },
+  {
+    id: 'req2',
+    senderId: 'user6',
+    receiverId: 'user1',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
+  },
+  {
+    id: 'req3',
+    senderId: 'user9',
+    receiverId: 'user2',
+    status: 'pending',
+    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+  }
+];
+
+// Export types for external usage
+export type { User, Message, Chat, FriendRequest, Notification }; 

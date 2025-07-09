@@ -214,13 +214,13 @@ export default function CreateChallengeModal({
     try {
       setIsLoading(true)
 
-      // Загружаем изображение
+      // Upload image
       let imageUrl = '/images/challenges/default.jpg'
       if (selectedFile) {
         imageUrl = await imagesApi.upload(selectedFile)
       }
 
-      // Создаем задание
+              // Create challenge
       const challenge = await challengesApi.create({
         title,
         description,
