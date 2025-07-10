@@ -34,31 +34,63 @@ export default function SignUpModal({
     return regex.test(email);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!username.trim() || !password.trim()) {
       setError("Username and password are required.");
       return;
     }
 
-    if (email && !isValidEmail(email)) {
-      setError("Please enter a valid email address.");
+    if (!email.trim() || !isValidEmail(email)) {
+      setError("A valid email address is required.");
       return;
     }
-    console.log({
-      username,
-      password,
-      email: email || null,
-      firstName: firstName || null,
-      lastName: lastName || null,
-    });
-    setUsername("");
-    setPassword("");
-    setEmail("");
-    setFirstName("");
-    setLastName("");
-    setError("");
 
-    onSignUpSuccess({ username });
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("First and last name are required.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8081/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+          email,
+          firstName,
+          lastName,
+        }),
+      });
+
+      if (!response.ok) {
+        const message = await response.text();
+        throw new Error(message || "Failed to sign up.");
+      }
+
+      const user = await response.json();
+
+      // Optional: If tokens are returned by backend, store them
+      if (user.accessToken && user.refreshToken) {
+        localStorage.setItem("accessToken", user.accessToken);
+        localStorage.setItem("refreshToken", user.refreshToken);
+      }
+
+      onSignUpSuccess({ username: user.username });
+      onClose();
+      setError("");
+
+      // Clear the form
+      setUsername("");
+      setPassword("");
+      setEmail("");
+      setFirstName("");
+      setLastName("");
+    } catch (err: any) {
+      setError(err.message || "An error occurred during sign up.");
+    }
   };
 
   return (
@@ -80,11 +112,26 @@ export default function SignUpModal({
         }}
       >
         <Box sx={{ display: "flex", justifyContent: "flex-end", mb: -2, mt: -2 }}>
-          <Button onClick={onClose} sx={{ minWidth: 0, color: "grey.700", fontSize: 24, fontWeight: 700, lineHeight: 1 }} aria-label="Close">
+          <Button
+            onClick={onClose}
+            sx={{
+              minWidth: 0,
+              color: "grey.700",
+              fontSize: 24,
+              fontWeight: 700,
+              lineHeight: 1,
+            }}
+            aria-label="Close"
+          >
             ×
           </Button>
         </Box>
-        <Typography variant="h6" textAlign="center" fontWeight={700} color="text.primary">
+        <Typography
+          variant="h6"
+          textAlign="center"
+          fontWeight={700}
+          color="text.primary"
+        >
           Sign Up
         </Typography>
 
@@ -96,7 +143,6 @@ export default function SignUpModal({
           onChange={(e) => setUsername(e.target.value)}
           fullWidth
         />
-
         <TextField
           label="Password *"
           type="password"
@@ -104,24 +150,21 @@ export default function SignUpModal({
           onChange={(e) => setPassword(e.target.value)}
           fullWidth
         />
-
         <TextField
-          label="Email (optional)"
+          label="Email *"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           fullWidth
         />
-
         <TextField
-          label="First Name (optional)"
+          label="First Name *"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           fullWidth
         />
-
         <TextField
-          label="Last Name (optional)"
+          label="Last Name *"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           fullWidth

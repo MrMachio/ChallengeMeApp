@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Modal,
   Paper,
@@ -8,7 +8,6 @@ import {
   Button,
   Stack,
   Alert,
-  Box,
 } from "@mui/material";
 
 interface LoginModalProps {
@@ -28,17 +27,39 @@ export default function LoginModal({
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-
-
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       setError("Username and password are required.");
       return;
     }
-    setError("");
-    onLoginSuccess({ username });
-  };
 
+    try {
+      const response = await fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(errText || "Login failed.");
+      }
+
+      const data = await response.json();
+      const { accessToken } = data;
+
+      localStorage.setItem("accessToken", accessToken);
+
+      onLoginSuccess({ username });
+
+      onClose();
+      setError("");
+    } catch (err: any) {
+      setError(err.message || "Something went wrong during login.");
+    }
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
