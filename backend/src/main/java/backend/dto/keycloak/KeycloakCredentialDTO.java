@@ -1,4 +1,4 @@
-package backend.dto;
+package backend.dto.keycloak;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CredentialDTO {
+public class KeycloakCredentialDTO {
     private String type;
     private String value;
     private boolean temporary;

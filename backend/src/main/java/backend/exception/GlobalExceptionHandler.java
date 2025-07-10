@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<String> handle(ResponseStatusException ex) {
+    public ResponseEntity<String> handleKeyCloakError(ResponseStatusException ex) {
         return ResponseEntity
                 .status(ex.getStatusCode())
                 .contentType(MediaType.APPLICATION_JSON)

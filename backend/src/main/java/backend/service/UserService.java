@@ -1,12 +1,14 @@
 package backend.service;
 
-import backend.dto.UserRequestDTO;
-import backend.dto.UserResponseDTO;
+import backend.dto.request.RegisterRequestDTO;
+import backend.dto.response.UserResponseDTO;
 import backend.exception.ConflictException;
 import backend.exception.NotFoundException;
 import backend.mapper.UserMapper;
 import backend.model.UserEntity;
 import backend.repository.UserRepository;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -21,18 +23,27 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
 
-    public UserResponseDTO createUser(UserRequestDTO userRequestDTO) {
-        if (userRepository.existsByUsername(userRequestDTO.getUsername())) {
+    public UserEntity findByAccessToken(String accessToken) {
+
+        DecodedJWT jwt = JWT.decode(accessToken);
+        UUID userId    = UUID.fromString(jwt.getSubject()); // SUB
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No local user with id " + userId));
+    }
+
+    public UserResponseDTO createUser(RegisterRequestDTO registerRequestDTO) {
+        if (userRepository.existsByUsername(registerRequestDTO.username())) {
             throw new ConflictException("Username is already in use");
         }
 
-        if (userRepository.existsByEmail(userRequestDTO.getEmail())) {
+        if (registerRequestDTO.email() != null && userRepository.existsByEmail(registerRequestDTO.email())) {
             throw new ConflictException("Email is already in use");
         }
 
-        UUID userId = keycloakClient.createUser(userMapper.toKeycloakDto(userRequestDTO));
+        UUID userId = keycloakClient.createUser(userMapper.toKeycloakDto(registerRequestDTO));
 
-        UserEntity entity = userMapper.toEntity(userId, userRequestDTO);
+        UserEntity entity = userMapper.toEntity(userId, registerRequestDTO);
         UserEntity saved = userRepository.save(entity);
 
         log.info("User with username {} has been successfully created", saved.getUsername());

@@ -21,35 +21,33 @@ public class UserEntity {
 
     @Column(nullable = false, length = 255, unique = true)
     private String username;
-
-    @Column(length = 255)
     private String email;
-
-    @Column(name = "first_name", length = 255)
     private String firstName;
-
-    @Column(name = "last_name", length = 255)
     private String lastName;
-
-    @Column(nullable = false)
-    private int level;
-
-    @Column(nullable = false)
-    private int points;
-
-    @Column(name = "created_at", nullable = false)
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+    @Column(name = "avatar_url", length = 512)
+    private String avatarUrl;
     private OffsetDateTime createdAt;
+
+    @OneToOne(mappedBy = "user",
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY,
+            orphanRemoval = true,
+            optional = false)
+    private UserStatsEntity stats;
+
+    public void setStats(UserStatsEntity stats) {
+        this.stats = stats;
+        if (stats != null) {
+            stats.setUser(this);
+        }
+    }
 
     @PrePersist
     public void prePersist() {
         if (createdAt == null) {
             createdAt = OffsetDateTime.now();
-        }
-        if (level <= 0) {
-            level = 1;
-        }
-        if (points < 0) {
-            points = 0;
         }
     }
 }

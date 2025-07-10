@@ -1,9 +1,9 @@
 package backend.service;
 
 import backend.config.KeycloakConfigProperties;
-import backend.dto.KeycloakUserCreateDTO;
-import backend.dto.RefreshRequestDTO;
-import backend.dto.TokenResponseDTO;
+import backend.dto.keycloak.KeycloakRegisterRequestDTO;
+import backend.dto.request.RefreshRequestDTO;
+import backend.dto.keycloak.KeycloakTokenResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -32,7 +32,7 @@ public class KeycloakClient {
     private String cachedAdminToken;
     private Instant adminTokenExpiry;
 
-    public TokenResponseDTO getUserToken(String username, String password) {
+    public KeycloakTokenResponseDTO getUserToken(String username, String password) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type",     "password");
         form.add("client_id",      keycloakProps.getClientId());
@@ -41,12 +41,12 @@ public class KeycloakClient {
         form.add("password",       password);
 
         try {
-            ResponseEntity<TokenResponseDTO> response = webClient.post()
+            ResponseEntity<KeycloakTokenResponseDTO> response = webClient.post()
                     .uri(keycloakProps.getTokenEndpoint())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .bodyValue(form)
                     .retrieve()
-                    .toEntity(TokenResponseDTO.class)
+                    .toEntity(KeycloakTokenResponseDTO.class)
                     .block();
 
             if (response == null || response.getBody() == null) {
@@ -67,7 +67,7 @@ public class KeycloakClient {
     }
 
 
-    public TokenResponseDTO refreshUserToken(RefreshRequestDTO refreshToken) {
+    public KeycloakTokenResponseDTO refreshUserToken(RefreshRequestDTO refreshToken) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "refresh_token");
         form.add("client_id", keycloakProps.getClientId());
@@ -75,12 +75,12 @@ public class KeycloakClient {
         form.add("refresh_token", refreshToken.getRefreshToken());
 
         try {
-            ResponseEntity<TokenResponseDTO> response = webClient.post()
+            ResponseEntity<KeycloakTokenResponseDTO> response = webClient.post()
                     .uri(keycloakProps.getTokenEndpoint())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .bodyValue(form)
                     .retrieve()
-                    .toEntity(TokenResponseDTO.class)
+                    .toEntity(KeycloakTokenResponseDTO.class)
                     .block();
 
             if (response == null || response.getBody() == null) {
@@ -102,19 +102,19 @@ public class KeycloakClient {
     }
 
 
-    public TokenResponseDTO getClientToken() {
+    public KeycloakTokenResponseDTO getClientToken() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("grant_type", "client_credentials");
         form.add("client_id", keycloakProps.getClientId());
         form.add("client_secret", keycloakProps.getClientSecret());
 
         try {
-            ResponseEntity<TokenResponseDTO> response = webClient.post()
+            ResponseEntity<KeycloakTokenResponseDTO> response = webClient.post()
                     .uri(keycloakProps.getTokenEndpoint())
                     .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                     .bodyValue(form)
                     .retrieve()
-                    .toEntity(TokenResponseDTO.class)
+                    .toEntity(KeycloakTokenResponseDTO.class)
                     .block();
 
             if (response == null || response.getBody() == null) {
@@ -143,14 +143,14 @@ public class KeycloakClient {
             return cachedAdminToken;
         }
         log.info("Admin token is null or expired => getting a new one");
-        TokenResponseDTO newAdminToken = getClientToken();
+        KeycloakTokenResponseDTO newAdminToken = getClientToken();
         cachedAdminToken = newAdminToken.getAccessToken();
         adminTokenExpiry = Instant.now().plusSeconds(newAdminToken.getExpiresIn());
         log.info("Admin token expires at: {}", adminTokenExpiry);
         return newAdminToken.getAccessToken();
     }
 
-    public UUID createUser(KeycloakUserCreateDTO user) {
+    public UUID createUser(KeycloakRegisterRequestDTO user) {
         String adminToken = getAdminAccessToken();
 
         try {

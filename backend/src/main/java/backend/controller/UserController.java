@@ -1,8 +1,6 @@
 package backend.controller;
 
-
-import backend.dto.UserRequestDTO;
-import backend.dto.UserResponseDTO;
+import backend.dto.response.UserResponseDTO;
 import backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,11 +17,11 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO user) {
-        UserResponseDTO createdUser =  userService.createUser(user);
-        return ResponseEntity.status(201).body(createdUser);
-    }
+//    @PostMapping
+//    public ResponseEntity<UserResponseDTO> createUser(@Valid @RequestBody UserRequestDTO user) {
+//        UserResponseDTO createdUser =  userService.createUser(user);
+//        return ResponseEntity.status(201).body(createdUser);
+//    }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {

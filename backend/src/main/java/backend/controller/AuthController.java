@@ -1,10 +1,16 @@
 package backend.controller;
 
+import backend.dto.request.RegisterRequestDTO;
+import backend.dto.response.TokenResponseDTO;
+import backend.dto.response.UserResponseDTO;
+import backend.mapper.AuthMapper;
+import backend.model.UserEntity;
 import backend.service.KeycloakClient;
-import backend.dto.LoginRequestDTO;
-import backend.dto.LoginResponseDTO;
-import backend.dto.RefreshRequestDTO;
-import backend.dto.TokenResponseDTO;
+import backend.dto.request.LoginRequestDTO;
+import backend.dto.response.AuthResponseDTO;
+import backend.dto.request.RefreshRequestDTO;
+import backend.dto.keycloak.KeycloakTokenResponseDTO;
+import backend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,28 +25,37 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class AuthController {
     private final KeycloakClient keycloakClient;
+    private final AuthMapper authMapper;
+    private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
-        TokenResponseDTO token = keycloakClient.getUserToken(loginRequest.getUsername(), loginRequest.getPassword());
-        Instant now = Instant.now();
-        return ResponseEntity.ok(new LoginResponseDTO(
-                token.getAccessToken(),
-                now.plusSeconds(token.getExpiresIn()),
-                token.getRefreshToken(),
-                now.plusSeconds(token.getRefreshExpiresIn())
-        ));
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+
+        KeycloakTokenResponseDTO keycloakToken = keycloakClient.getUserToken(loginRequest.getUsername(), loginRequest.getPassword());
+
+        UserEntity entity = userService.findByAccessToken(keycloakToken.getAccessToken());
+        UserResponseDTO user = authMapper.toUserDto(entity);
+
+        TokenResponseDTO token = authMapper.toTokenDto(keycloakToken);
+
+        return ResponseEntity.ok(authMapper.toAuthDto(user, token));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<LoginResponseDTO> refresh(@RequestBody RefreshRequestDTO request) {
-        TokenResponseDTO token = keycloakClient.refreshUserToken(request);
-        Instant now = Instant.now();
-        return ResponseEntity.ok(new LoginResponseDTO(
-                token.getAccessToken(),
-                now.plusSeconds(token.getExpiresIn()),
-                token.getRefreshToken(),
-                now.plusSeconds(token.getRefreshExpiresIn())
-        ));
+    public ResponseEntity<TokenResponseDTO> refresh(@RequestBody RefreshRequestDTO request) {
+        KeycloakTokenResponseDTO keycloakToken = keycloakClient.refreshUserToken(request);
+        return ResponseEntity.ok(authMapper.toTokenDto(keycloakToken));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
+
+        UserResponseDTO user = userService.createUser(request);
+
+        // Immediate login
+        KeycloakTokenResponseDTO keycloakToken = keycloakClient.getUserToken(request.username(), request.password());
+        TokenResponseDTO token = authMapper.toTokenDto(keycloakToken);
+
+        return ResponseEntity.ok(authMapper.toAuthDto(user, token));
     }
 }
