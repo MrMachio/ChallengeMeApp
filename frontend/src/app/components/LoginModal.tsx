@@ -34,7 +34,7 @@ export default function LoginModal({
     }
 
     try {
-      const response = await fetch("http://localhost:8080/auth/login", {
+      const response = await fetch("http://localhost:8081/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,16 +48,20 @@ export default function LoginModal({
       }
 
       const data = await response.json();
-      const { accessToken } = data;
+      const { accessToken, refreshToken } = data;
 
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
 
       onLoginSuccess({ username });
-
       onClose();
       setError("");
     } catch (err: any) {
-      setError(err.message || "Something went wrong during login.");
+      const errorMsg =
+        err.message.includes("invalid_grant") || err.message.includes("credentials")
+          ? "Invalid username or password."
+          : err.message || "Something went wrong during login.";
+      setError(errorMsg);
     }
   };
 

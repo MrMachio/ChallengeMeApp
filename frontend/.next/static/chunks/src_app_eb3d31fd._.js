@@ -33,7 +33,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
             return;
         }
         try {
-            const response = await fetch("http://localhost:8080/auth/login", {
+            const response = await fetch("http://localhost:8081/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -48,15 +48,17 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                 throw new Error(errText || "Login failed.");
             }
             const data = await response.json();
-            const { accessToken } = data;
+            const { accessToken, refreshToken } = data;
             localStorage.setItem("accessToken", accessToken);
+            localStorage.setItem("refreshToken", refreshToken);
             onLoginSuccess({
                 username
             });
             onClose();
             setError("");
         } catch (err) {
-            setError(err.message || "Something went wrong during login.");
+            const errorMsg = err.message.includes("invalid_grant") || err.message.includes("credentials") ? "Invalid username or password." : err.message || "Something went wrong during login.";
+            setError(errorMsg);
         }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Modal$2f$Modal$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Modal$3e$__["Modal"], {
@@ -84,7 +86,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                     children: "Log In"
                 }, void 0, false, {
                     fileName: "[project]/src/app/components/LoginModal.tsx",
-                    lineNumber: 81,
+                    lineNumber: 85,
                     columnNumber: 9
                 }, this),
                 error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Alert$2f$Alert$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Alert$3e$__["Alert"], {
@@ -92,7 +94,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                     children: error
                 }, void 0, false, {
                     fileName: "[project]/src/app/components/LoginModal.tsx",
-                    lineNumber: 85,
+                    lineNumber: 89,
                     columnNumber: 19
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -103,7 +105,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                     onChange: (e)=>setUsername(e.target.value)
                 }, void 0, false, {
                     fileName: "[project]/src/app/components/LoginModal.tsx",
-                    lineNumber: 87,
+                    lineNumber: 91,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$TextField$2f$TextField$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__TextField$3e$__["TextField"], {
@@ -114,7 +116,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                     onChange: (e)=>setPassword(e.target.value)
                 }, void 0, false, {
                     fileName: "[project]/src/app/components/LoginModal.tsx",
-                    lineNumber: 95,
+                    lineNumber: 99,
                     columnNumber: 9
                 }, this),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Stack$2f$Stack$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Stack$3e$__["Stack"], {
@@ -128,7 +130,7 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                             children: "Log In"
                         }, void 0, false, {
                             fileName: "[project]/src/app/components/LoginModal.tsx",
-                            lineNumber: 104,
+                            lineNumber: 108,
                             columnNumber: 11
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$mui$2f$material$2f$esm$2f$Button$2f$Button$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Button$3e$__["Button"], {
@@ -137,24 +139,24 @@ function LoginModal({ open, onClose, onLoginSuccess, onSignUpClick }) {
                             children: "Don't have an account? Sign up"
                         }, void 0, false, {
                             fileName: "[project]/src/app/components/LoginModal.tsx",
-                            lineNumber: 108,
+                            lineNumber: 112,
                             columnNumber: 11
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/components/LoginModal.tsx",
-                    lineNumber: 103,
+                    lineNumber: 107,
                     columnNumber: 9
                 }, this)
             ]
         }, void 0, true, {
             fileName: "[project]/src/app/components/LoginModal.tsx",
-            lineNumber: 66,
+            lineNumber: 70,
             columnNumber: 7
         }, this)
     }, void 0, false, {
         fileName: "[project]/src/app/components/LoginModal.tsx",
-        lineNumber: 65,
+        lineNumber: 69,
         columnNumber: 5
     }, this);
 }
