@@ -338,11 +338,8 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
         userData.activeChallenges = updatedActiveChallenges;
         localStorage.setItem('userData', JSON.stringify(userData));
         
-        // Update global mockUsers data
-        const { mockUsers } = await import('@/lib/mock/data');
-        if (mockUsers[currentUserId]) {
-          mockUsers[currentUserId].activeChallenges = updatedActiveChallenges;
-        }
+        // TODO: Replace with real API call to update user challenges
+        // Temporarily commented out mockUsers usage
         
         // Trigger status refetch to update UI
         window.dispatchEvent(new Event('userUpdated'));
@@ -404,21 +401,8 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       completion.status = 'approved'
       completion.completedAt = new Date().toISOString()
       
-      // Move user from pending to completed challenges
-      const user = mockUsers[completion.userId]
-      if (user) {
-        user.pendingChallenges = user.pendingChallenges.filter((id: string) => id !== challenge.id.toString())
-        if (!user.completedChallenges.includes(challenge.id.toString())) {
-          user.completedChallenges.push(challenge.id.toString())
-          
-          // Award points only if it's not the current user (to avoid double awarding)
-          // If it's the current user, points will be awarded in challengesApi.updateChallengeStatus
-          if (!currentUser || completion.userId !== currentUser.id) {
-            const challengePoints = challenge.points || 0
-            user.points += challengePoints
-          }
-        }
-      }
+      // TODO: Replace with real API call to update user challenges
+      // Temporarily removed mockUsers usage
       
       // Update localStorage if it's current user
       if (currentUser && completion.userId === currentUser.id) {
@@ -436,14 +420,8 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
     if (completion) {
       completion.status = 'rejected'
       
-      // Remove challenge completely from user's lists (like Cancel Challenge)
-      const user = mockUsers[completion.userId]
-      if (user) {
-        // Remove from pending challenges
-        user.pendingChallenges = user.pendingChallenges.filter((id: string) => id !== challenge.id.toString())
-        // Also remove from active challenges to return to 'none' state
-        user.activeChallenges = user.activeChallenges.filter((id: string) => id !== challenge.id.toString())
-      }
+      // TODO: Replace with real API call to update user challenges
+      // Temporarily removed mockUsers usage
       
       // Update localStorage if it's current user
       if (currentUser && completion.userId === currentUser.id) {

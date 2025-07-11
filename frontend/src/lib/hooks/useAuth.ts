@@ -1,6 +1,5 @@
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-import { mockCurrentUser, mockUsers } from '../mock/data'
 
 export interface User {
   id: string
@@ -16,152 +15,323 @@ export interface User {
   favoritesChallenges: string[]
 }
 
+interface AuthResponse {
+  user: {
+    id: string
+    username: string
+    email: string
+    firstName?: string
+    lastName?: string
+    avatarUrl?: string
+    points: number
+    activeChallenges: string[]
+    pendingChallenges: string[]
+    completedChallenges: string[]
+    favoritesChallenges: string[]
+    createdChallenges: string[]
+  }
+  token: {
+    accessToken: string
+    expiresAt: string
+    refreshToken: string
+    refreshExpiresAt: string
+  }
+}
+
+interface UserResponse {
+  id: string
+  username: string
+  email: string
+  firstName?: string
+  lastName?: string
+  avatarUrl?: string
+  points: number
+  activeChallenges: string[]
+  pendingChallenges: string[]
+  completedChallenges: string[]
+  favoritesChallenges: string[]
+  createdChallenges: string[]
+}
+
+const API_BASE_URL = 'http://localhost:8081'
+
+// Utility functions for localStorage
+const saveUserToStorage = (user: User) => {
+  localStorage.setItem('user', JSON.stringify(user))
+}
+
+const getUserFromStorage = (): User | null => {
+  try {
+    const userStr = localStorage.getItem('user')
+    return userStr ? JSON.parse(userStr) : null
+  } catch (error) {
+    console.error('Error parsing user from storage:', error)
+    return null
+  }
+}
+
+const clearUserFromStorage = () => {
+  localStorage.removeItem('user')
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
-  // Получение пользователя по ID из mock данных
-  const getUserById = (userId: string): User | null => {
-    const mockUser = mockUsers[userId]
-    if (mockUser) {
-      return {
-        id: mockUser.id,
-        email: mockUser.email,
-        username: mockUser.username,
-        fullName: mockUser.fullName,
-        avatarUrl: mockUser.avatarUrl,
-        points: mockUser.points,
-        completedChallenges: mockUser.completedChallenges,
-        activeChallenges: mockUser.activeChallenges,
-        createdChallenges: mockUser.createdChallenges,
-        pendingChallenges: mockUser.pendingChallenges,
-        favoritesChallenges: mockUser.favoritesChallenges
+  // Проверка токена и получение данных пользователя
+  const verifyToken = useCallback(async (token: string): Promise<User | null> => {
+    try {
+      // TODO: Когда /auth/me будет реализован в backend'е, раскомментировать этот код
+      /*
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (response.ok) {
+        const userData: UserResponse = await response.json()
+        const user: User = {
+          id: userData.id,
+          email: userData.email,
+          username: userData.username,
+          fullName: userData.firstName && userData.lastName 
+            ? `${userData.firstName} ${userData.lastName}`
+            : userData.firstName || userData.lastName,
+          avatarUrl: userData.avatarUrl || '/images/avatars/default.svg',
+          points: userData.points || 0,
+          completedChallenges: userData.completedChallenges || [],
+          activeChallenges: userData.activeChallenges || [],
+          createdChallenges: userData.createdChallenges || [],
+          pendingChallenges: userData.pendingChallenges || [],
+          favoritesChallenges: userData.favoritesChallenges || [],
+        }
+        return user
       }
+      */
+      
+      // Временное решение: получаем пользователя из localStorage
+      // Это работает пока не реализован эндпоинт /auth/me
+      const storedUser = getUserFromStorage()
+      if (storedUser && token) {
+        return storedUser
+      }
+      
+      return null
+    } catch (error) {
+      console.error('Error verifying token:', error)
+      return null
     }
-    return null
-  }
+  }, [])
 
+  // Обновление токена
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const refreshTokenValue = localStorage.getItem('refreshToken')
+      if (!refreshTokenValue) return false
+
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refreshToken: refreshTokenValue,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        localStorage.setItem('accessToken', data.accessToken)
+        localStorage.setItem('refreshToken', data.refreshToken)
+        localStorage.setItem('expiresAt', data.expiresAt)
+        localStorage.setItem('refreshExpiresAt', data.refreshExpiresAt)
+        
+        const userData = await verifyToken(data.accessToken)
+        if (userData) {
+          setUser(userData)
+          saveUserToStorage(userData)
+          return true
+        }
+      }
+      return false
+    } catch (error) {
+      console.error('Error refreshing token:', error)
+      return false
+    }
+  }, [verifyToken])
+
+  // Инициализация при загрузке
   useEffect(() => {
-    // Проверяем наличие ID пользователя в localStorage
-    const loadUser = () => {
+    const initializeAuth = async () => {
       try {
-        const savedUserId = localStorage.getItem('currentUserId')
-        if (savedUserId) {
-          // Получаем актуальные данные из mock данных
-          const currentUser = getUserById(savedUserId)
-          if (currentUser) {
-            setUser(currentUser)
+        const accessToken = localStorage.getItem('accessToken')
+        const expiresAt = localStorage.getItem('expiresAt')
+        const storedUser = getUserFromStorage()
+        
+        if (accessToken && expiresAt && storedUser) {
+          const isExpired = new Date(expiresAt) <= new Date()
+          
+          if (isExpired) {
+            // Попытка обновить токен
+            const refreshed = await refreshToken()
+            if (!refreshed) {
+              // Если обновление не удалось, очищаем все данные
+              localStorage.removeItem('accessToken')
+              localStorage.removeItem('refreshToken')
+              localStorage.removeItem('expiresAt')
+              localStorage.removeItem('refreshExpiresAt')
+              clearUserFromStorage()
+            }
           } else {
-            // Если пользователь не найден в mock данных, очищаем localStorage
-            localStorage.removeItem('currentUserId')
+            // Токен действителен, восстанавливаем пользователя
+            setUser(storedUser)
           }
         }
       } catch (error) {
-        console.error('Error loading user from localStorage:', error)
-        // Очищаем некорректные данные
-        localStorage.removeItem('currentUserId')
+        console.error('Error initializing auth:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadUser()
+    initializeAuth()
+  }, [refreshToken])
 
-    // Слушаем изменения localStorage
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'currentUserId') {
-        loadUser()
+  const signIn = useCallback(async (username: string, password: string) => {
+    try {
+      setLoading(true)
+      
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username, // Backend expects username field
+          password,
+        }),
+      })
+
+      if (response.ok) {
+        const data: AuthResponse = await response.json()
+        
+        // Сохраняем токены
+        localStorage.setItem('accessToken', data.token.accessToken)
+        localStorage.setItem('refreshToken', data.token.refreshToken)
+        localStorage.setItem('expiresAt', data.token.expiresAt)
+        localStorage.setItem('refreshExpiresAt', data.token.refreshExpiresAt)
+        
+        // Используем данные пользователя из ответа login напрямую
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username,
+          fullName: data.user.firstName && data.user.lastName 
+            ? `${data.user.firstName} ${data.user.lastName}`
+            : data.user.firstName || data.user.lastName,
+          avatarUrl: data.user.avatarUrl || '/images/avatars/default.svg',
+          points: data.user.points || 0,
+          completedChallenges: data.user.completedChallenges || [],
+          activeChallenges: data.user.activeChallenges || [],
+          createdChallenges: data.user.createdChallenges || [],
+          pendingChallenges: data.user.pendingChallenges || [],
+          favoritesChallenges: data.user.favoritesChallenges || [],
+        }
+        setUser(user)
+        saveUserToStorage(user) // Сохраняем пользователя в localStorage
+        
+        // Отправляем событие для обновления UI
+        window.dispatchEvent(new Event('userUpdated'))
+        router.push('/')
+      } else {
+        const errorText = await response.text()
+        console.error('Login failed with status:', response.status, 'Response:', errorText)
+        throw new Error(`Login failed: ${response.status} - ${errorText}`)
       }
-    }
-
-    window.addEventListener('storage', handleStorageChange)
-    
-    // Слушаем изменения mock данных в том же окне
-    const handleMockDataUpdate = () => {
-      loadUser()
-    }
-
-    window.addEventListener('userUpdated', handleMockDataUpdate)
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('userUpdated', handleMockDataUpdate)
-    }
-  }, [])
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    // Имитируем задержку запроса
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Используем данные из mock (по умолчанию user1)
-    const testUserId = 'user1'
-    const testUser = getUserById(testUserId)
-    
-    if (testUser) {
-      setUser(testUser)
-      // Сохраняем только ID пользователя в localStorage
-      localStorage.setItem('currentUserId', testUserId)
-      // Отправляем событие для обновления UI
-      window.dispatchEvent(new Event('userUpdated'))
-      
-      // Небольшая задержка для обеспечения обновления состояния
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Перенаправляем на главную страницу
-      router.push('/')
+    } catch (error) {
+      console.error('Login error:', error)
+      throw error
+    } finally {
+      setLoading(false)
     }
   }, [router])
 
-  const signUp = useCallback(async (email: string, password: string, username: string) => {
-    // Имитируем задержку запроса
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Создаем ID для нового пользователя
-    const newUserId = `user${Date.now()}`
-    
-    // Создаем нового пользователя в mock данных
-    const newMockUser = {
-      id: newUserId,
-      email,
-      username,
-      fullName: username,
-      avatarUrl: '/images/avatars/default.svg',
-      points: 0,
-      completedChallenges: [],
-      activeChallenges: [],
-      createdChallenges: [],
-      pendingChallenges: [],
-      favoritesChallenges: [],
-      followers: 0,
-      following: 0
-    }
-    
-    // Добавляем пользователя в mock данные
-    mockUsers[newUserId] = newMockUser
-    
-    const newUser = getUserById(newUserId)
-    if (newUser) {
-      setUser(newUser)
-      // Сохраняем только ID пользователя в localStorage
-      localStorage.setItem('currentUserId', newUserId)
-      // Отправляем событие для обновления UI
-      window.dispatchEvent(new Event('userUpdated'))
+  const signUp = useCallback(async (email: string, password: string, username: string, firstName?: string, lastName?: string) => {
+    try {
+      setLoading(true)
       
-      // Небольшая задержка для обеспечения обновления состояния
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Перенаправляем на главную страницу
-      router.push('/')
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+          firstName: firstName || username, // Используем firstName или username как fallback
+          lastName: lastName,
+        }),
+      })
+
+      if (response.ok) {
+        const data: AuthResponse = await response.json()
+        
+        // Сохраняем токены
+        localStorage.setItem('accessToken', data.token.accessToken)
+        localStorage.setItem('refreshToken', data.token.refreshToken)
+        localStorage.setItem('expiresAt', data.token.expiresAt)
+        localStorage.setItem('refreshExpiresAt', data.token.refreshExpiresAt)
+        
+        // Используем данные пользователя из ответа регистрации напрямую
+        const user: User = {
+          id: data.user.id,
+          email: data.user.email,
+          username: data.user.username,
+          fullName: data.user.firstName && data.user.lastName 
+            ? `${data.user.firstName} ${data.user.lastName}`
+            : data.user.firstName || data.user.lastName,
+          avatarUrl: data.user.avatarUrl || '/images/avatars/default.svg',
+          points: data.user.points || 0,
+          completedChallenges: data.user.completedChallenges || [],
+          activeChallenges: data.user.activeChallenges || [],
+          createdChallenges: data.user.createdChallenges || [],
+          pendingChallenges: data.user.pendingChallenges || [],
+          favoritesChallenges: data.user.favoritesChallenges || [],
+        }
+        setUser(user)
+        saveUserToStorage(user) // Сохраняем пользователя в localStorage
+        
+        // Отправляем событие для обновления UI
+        window.dispatchEvent(new Event('userUpdated'))
+        router.push('/')
+      } else {
+        const errorText = await response.text()
+        console.error('Registration failed with status:', response.status, 'Response:', errorText)
+        throw new Error(`Registration failed: ${response.status} - ${errorText}`)
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      throw error
+    } finally {
+      setLoading(false)
     }
   }, [router])
 
   const signOut = useCallback(async () => {
     setUser(null)
-    localStorage.removeItem('currentUserId')
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('expiresAt')
+    localStorage.removeItem('refreshExpiresAt')
+    clearUserFromStorage() // Удаляем пользователя из localStorage
+    
     // Отправляем событие для обновления UI
     window.dispatchEvent(new Event('userUpdated'))
-    router.push('/login')
+    router.push('/')
   }, [router])
 
   return {

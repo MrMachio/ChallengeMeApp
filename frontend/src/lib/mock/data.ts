@@ -69,241 +69,11 @@ interface Notification {
   data?: any; // Additional data based on notification type
 }
 
-export const mockUsers: UserMap = {
-  'user1': {
-    id: 'user1',
-    username: 'TechMaster',
-    email: 'john@example.com',
-    fullName: 'John Smith',
-    avatarUrl: '/images/avatars/user1.jpg',
-    points: 2500,
-    completedChallenges: ['2', '4', '6', '8'],
-    createdChallenges: ['1', '7'],
-    activeChallenges: ['3', '5', '9'],
-    pendingChallenges: [],
-    favoritesChallenges: ['10', '11', '12'],
-    receivedChallenges: [], // Received from other users via chat
-    followers: 120,
-    following: 85,
-    friends: ['user2', 'user3', 'user5'],
-    friendRequests: {
-      sent: ['user7'],
-      received: ['user4', 'user6']
-    },
-    lastSeen: new Date().toISOString(),
-    isOnline: true
-  },
-  'user2': {
-    id: 'user2',
-    username: 'EcoWarrior',
-    email: 'emma@example.com',
-    fullName: 'Emma Green',
-    avatarUrl: '/images/avatars/user2.jpg',
-    points: 1800,
-    completedChallenges: ['1', '5'],
-    createdChallenges: ['2', '6'],
-    activeChallenges: ['4'],
-    pendingChallenges: [],
-    favoritesChallenges: ['3', '7', '9'],
-    receivedChallenges: [],
-    followers: 75,
-    following: 50,
-    friends: ['user1', 'user3', 'user4'],
-    friendRequests: {
-      sent: ['user8'],
-      received: ['user9']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-    isOnline: false
-  },
-  'user3': {
-    id: 'user3',
-    username: 'FitnessPro',
-    email: 'mike@example.com',
-    fullName: 'Mike Johnson',
-    avatarUrl: '/images/avatars/user3.jpg',
-    points: 3200,
-    completedChallenges: ['1', '4'],
-    createdChallenges: ['3'],
-    activeChallenges: ['5', '6'],
-    pendingChallenges: [],
-    favoritesChallenges: ['2', '8', '10'],
-    receivedChallenges: [],
-    followers: 250,
-    following: 120,
-    friends: ['user1', 'user2', 'user5'],
-    friendRequests: {
-      sent: ['user4'],
-      received: ['user10']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 15).toISOString(), // 15 minutes ago
-    isOnline: false
-  },
-  'user4': {
-    id: 'user4',
-    username: 'ArtisticSoul',
-    email: 'sofia@example.com',
-    fullName: 'Sofia Rodriguez',
-    avatarUrl: '/images/avatars/user4.jpg',
-    points: 1500,
-    completedChallenges: ['3', '6', '7'],
-    createdChallenges: ['4'],
-    activeChallenges: ['1', '2'],
-    pendingChallenges: [],
-    favoritesChallenges: ['5', '9', '11'],
-    receivedChallenges: [],
-    followers: 95,
-    following: 88,
-    friends: ['user2', 'user6'],
-    friendRequests: {
-      sent: ['user1'],
-      received: ['user3']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-    isOnline: false
-  },
-  'user5': {
-    id: 'user5',
-    username: 'MindfulGuru',
-    email: 'david@example.com',
-    fullName: 'David Chen',
-    avatarUrl: '/images/avatars/user5.jpg',
-    points: 2100,
-    completedChallenges: [],
-    createdChallenges: ['5'],
-    activeChallenges: ['2', '6'],
-    pendingChallenges: [],
-    favoritesChallenges: ['1', '4', '8'],
-    receivedChallenges: [],
-    followers: 180,
-    following: 95,
-    friends: ['user1', 'user3', 'user7'],
-    friendRequests: {
-      sent: ['user6'],
-      received: ['user8']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 2).toISOString(), // 2 minutes ago
-    isOnline: true
-  },
-  'user6': {
-    id: 'user6',
-    username: 'BookWorm',
-    email: 'lisa@example.com',
-    fullName: 'Lisa Taylor',
-    avatarUrl: '/images/avatars/default.svg',
-    points: 1750,
-    completedChallenges: ['2', '5', '8'],
-    createdChallenges: ['8', '11'],
-    activeChallenges: ['7', '9'],
-    pendingChallenges: [],
-    favoritesChallenges: ['1', '3', '10'],
-    receivedChallenges: [],
-    followers: 65,
-    following: 42,
-    friends: ['user4', 'user8'],
-    friendRequests: {
-      sent: ['user1'],
-      received: ['user5']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 60).toISOString(), // 1 hour ago
-    isOnline: false
-  },
-  'user7': {
-    id: 'user7',
-    username: 'GreenThumb',
-    email: 'marcus@example.com',
-    fullName: 'Marcus Brown',
-    avatarUrl: '/images/avatars/default.svg',
-    points: 2800,
-    completedChallenges: ['3', '6', '9'],
-    createdChallenges: ['9', '12'],
-    activeChallenges: ['8', '10'],
-    pendingChallenges: [],
-    favoritesChallenges: ['2', '4', '11'],
-    receivedChallenges: [],
-    followers: 195,
-    following: 88,
-    friends: ['user5', 'user9'],
-    friendRequests: {
-      sent: ['user10'],
-      received: ['user1']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 10).toISOString(), // 10 minutes ago
-    isOnline: false
-  },
-  'user8': {
-    id: 'user8',
-    username: 'ChefMaster',
-    email: 'olivia@example.com',
-    fullName: 'Olivia Martinez',
-    avatarUrl: '/images/avatars/default.svg',
-    points: 3100,
-    completedChallenges: ['4', '7', '10'],
-    createdChallenges: ['10', '13'],
-    activeChallenges: ['9', '11'],
-    pendingChallenges: [],
-    favoritesChallenges: ['1', '5', '12'],
-    receivedChallenges: [],
-    followers: 280,
-    following: 150,
-    friends: ['user6', 'user10'],
-    friendRequests: {
-      sent: ['user5'],
-      received: ['user2']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 minutes ago
-    isOnline: false
-  },
-  'user9': {
-    id: 'user9',
-    username: 'MusicLover',
-    email: 'james@example.com',
-    fullName: 'James Wilson',
-    avatarUrl: '/images/avatars/default.svg',
-    points: 1950,
-    completedChallenges: ['5', '8', '11'],
-    createdChallenges: ['14'],
-    activeChallenges: ['10', '12'],
-    pendingChallenges: [],
-    favoritesChallenges: ['2', '6', '13'],
-    receivedChallenges: [],
-    followers: 110,
-    following: 75,
-    friends: ['user7'],
-    friendRequests: {
-      sent: ['user2'],
-      received: ['user10']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 20).toISOString(), // 20 minutes ago
-    isOnline: false
-  },
-  'user10': {
-    id: 'user10',
-    username: 'TravelBug',
-    email: 'nina@example.com',
-    fullName: 'Nina Patel',
-    avatarUrl: '/images/avatars/default.svg',
-    points: 2400,
-    completedChallenges: ['6', '9', '12'],
-    createdChallenges: ['15'],
-    activeChallenges: ['11', '13'],
-    pendingChallenges: [],
-    favoritesChallenges: ['1', '4', '7'],
-    receivedChallenges: [],
-    followers: 165,
-    following: 92,
-    friends: ['user8'],
-    friendRequests: {
-      sent: ['user3', 'user9'],
-      received: ['user7']
-    },
-    lastSeen: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutes ago
-    isOnline: true
-  }
-};
+// Mock users removed - now using real backend API
+export const mockUsers: UserMap = {};
 
-// Текущий пользователь
-export const mockCurrentUser = mockUsers['user1'];
+// Mock current user removed - now using real backend API
+export const mockCurrentUser = null;
 
 interface ChallengeLikes {
   [key: string]: string[];
@@ -327,6 +97,20 @@ export const mockChallengeLikes: ChallengeLikes = {
   '15': ['user1', 'user4', 'user5', 'user8', 'user10']
 };
 
+// Static user data for backward compatibility
+const staticUserData: Record<string, { username: string; avatarUrl: string }> = {
+  'user1': { username: 'TechMaster', avatarUrl: '/images/avatars/user1.jpg' },
+  'user2': { username: 'EcoWarrior', avatarUrl: '/images/avatars/user2.jpg' },
+  'user3': { username: 'FitnessPro', avatarUrl: '/images/avatars/user3.jpg' },
+  'user4': { username: 'ArtisticSoul', avatarUrl: '/images/avatars/user4.jpg' },
+  'user5': { username: 'MindfulGuru', avatarUrl: '/images/avatars/user5.jpg' },
+  'user6': { username: 'BookWorm', avatarUrl: '/images/avatars/default.svg' },
+  'user7': { username: 'GreenThumb', avatarUrl: '/images/avatars/default.svg' },
+  'user8': { username: 'ChefMaster', avatarUrl: '/images/avatars/default.svg' },
+  'user9': { username: 'MusicLover', avatarUrl: '/images/avatars/default.svg' },
+  'user10': { username: 'TravelBug', avatarUrl: '/images/avatars/default.svg' }
+};
+
 export const mockChallenges = [
   {
     id: '1',
@@ -341,8 +125,8 @@ export const mockChallenges = [
     likesCount: 3,
     completionsCount: 58,
     creator: {
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl
     },
     createdAt: '2024-02-01T10:00:00Z'
   },
@@ -359,8 +143,8 @@ export const mockChallenges = [
     likesCount: 2,
     completionsCount: 32,
     creator: {
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl
     },
     createdAt: '2024-02-05T15:30:00Z'
   },
@@ -377,8 +161,8 @@ export const mockChallenges = [
     likesCount: 4,
     completionsCount: 75,
     creator: {
-      username: mockUsers['user3'].username,
-      avatarUrl: mockUsers['user3'].avatarUrl
+      username: staticUserData['user3'].username,
+      avatarUrl: staticUserData['user3'].avatarUrl
     },
     createdAt: '2024-02-03T08:15:00Z'
   },
@@ -395,8 +179,8 @@ export const mockChallenges = [
     likesCount: 2,
     completionsCount: 28,
     creator: {
-      username: mockUsers['user4'].username,
-      avatarUrl: mockUsers['user4'].avatarUrl
+      username: staticUserData['user4'].username,
+      avatarUrl: staticUserData['user4'].avatarUrl
     },
     createdAt: '2024-02-08T12:00:00Z'
   },
@@ -413,8 +197,8 @@ export const mockChallenges = [
     likesCount: 3,
     completionsCount: 45,
     creator: {
-      username: mockUsers['user5'].username,
-      avatarUrl: mockUsers['user5'].avatarUrl
+      username: staticUserData['user5'].username,
+      avatarUrl: staticUserData['user5'].avatarUrl
     },
     createdAt: '2024-02-04T09:45:00Z'
   },
@@ -431,8 +215,8 @@ export const mockChallenges = [
     likesCount: 3,
     completionsCount: 89,
     creator: {
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl
     },
     createdAt: '2024-02-07T14:20:00Z'
   },
@@ -449,8 +233,8 @@ export const mockChallenges = [
     likesCount: 2,
     completionsCount: 34,
     creator: {
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl
     },
     createdAt: '2024-02-06T11:30:00Z'
   },
@@ -467,8 +251,8 @@ export const mockChallenges = [
     likesCount: 5,
     completionsCount: 42,
     creator: {
-      username: mockUsers['user6'].username,
-      avatarUrl: mockUsers['user6'].avatarUrl
+      username: staticUserData['user6'].username,
+      avatarUrl: staticUserData['user6'].avatarUrl
     },
     createdAt: '2024-02-09T16:20:00Z'
   },
@@ -485,8 +269,8 @@ export const mockChallenges = [
     likesCount: 5,
     completionsCount: 63,
     creator: {
-      username: mockUsers['user7'].username,
-      avatarUrl: mockUsers['user7'].avatarUrl
+      username: staticUserData['user7'].username,
+      avatarUrl: staticUserData['user7'].avatarUrl
     },
     createdAt: '2024-02-10T13:45:00Z'
   },
@@ -503,8 +287,8 @@ export const mockChallenges = [
     likesCount: 5,
     completionsCount: 37,
     creator: {
-      username: mockUsers['user8'].username,
-      avatarUrl: mockUsers['user8'].avatarUrl
+      username: staticUserData['user8'].username,
+      avatarUrl: staticUserData['user8'].avatarUrl
     },
     createdAt: '2024-02-11T11:30:00Z'
   },
@@ -521,8 +305,8 @@ export const mockChallenges = [
     likesCount: 4,
     completionsCount: 51,
     creator: {
-      username: mockUsers['user6'].username,
-      avatarUrl: mockUsers['user6'].avatarUrl
+      username: staticUserData['user6'].username,
+      avatarUrl: staticUserData['user6'].avatarUrl
     },
     createdAt: '2024-02-12T09:15:00Z'
   },
@@ -539,8 +323,8 @@ export const mockChallenges = [
     likesCount: 4,
     completionsCount: 29,
     creator: {
-      username: mockUsers['user7'].username,
-      avatarUrl: mockUsers['user7'].avatarUrl
+      username: staticUserData['user7'].username,
+      avatarUrl: staticUserData['user7'].avatarUrl
     },
     createdAt: '2024-02-13T15:40:00Z'
   },
@@ -557,8 +341,8 @@ export const mockChallenges = [
     likesCount: 4,
     completionsCount: 33,
     creator: {
-      username: mockUsers['user8'].username,
-      avatarUrl: mockUsers['user8'].avatarUrl
+      username: staticUserData['user8'].username,
+      avatarUrl: staticUserData['user8'].avatarUrl
     },
     createdAt: '2024-02-14T12:25:00Z'
   },
@@ -575,8 +359,8 @@ export const mockChallenges = [
     likesCount: 4,
     completionsCount: 25,
     creator: {
-      username: mockUsers['user9'].username,
-      avatarUrl: mockUsers['user9'].avatarUrl
+      username: staticUserData['user9'].username,
+      avatarUrl: staticUserData['user9'].avatarUrl
     },
     createdAt: '2024-02-15T10:50:00Z'
   },
@@ -593,8 +377,8 @@ export const mockChallenges = [
     likesCount: 5,
     completionsCount: 38,
     creator: {
-      username: mockUsers['user10'].username,
-      avatarUrl: mockUsers['user10'].avatarUrl
+      username: staticUserData['user10'].username,
+      avatarUrl: staticUserData['user10'].avatarUrl
     },
     createdAt: '2024-02-16T14:15:00Z'
   }
@@ -603,26 +387,24 @@ export const mockChallenges = [
   likesCount: (mockChallengeLikes[challenge.id] || []).length
 }));
 
-// Function to calculate user points based on completed challenges
+// Function to calculate user points based on completed challenges - now using static data
 const calculateUserPoints = (userId: string): number => {
-  const user = mockUsers[userId];
-  if (!user) return 0;
+  // Static user points since we removed mockUsers
+  const staticPoints: Record<string, number> = {
+    'user1': 2500,
+    'user2': 1800,
+    'user3': 3200,
+    'user4': 1500,
+    'user5': 2100,
+    'user6': 1750,
+    'user7': 2800,
+    'user8': 3100,
+    'user9': 1950,
+    'user10': 2400
+  };
   
-  let totalPoints = 0;
-  user.completedChallenges.forEach(challengeId => {
-    const challenge = mockChallenges.find(c => c.id === challengeId);
-    if (challenge) {
-      totalPoints += challenge.points;
-    }
-  });
-  
-  return totalPoints;
+  return staticPoints[userId] || 0;
 };
-
-// Update all user points based on their completed challenges
-Object.keys(mockUsers).forEach(userId => {
-  mockUsers[userId].points = calculateUserPoints(userId);
-});
 
 export const mockCategories = [
   { id: '1', name: 'Educational', icon: 'SchoolIcon' },
@@ -641,8 +423,8 @@ export const mockComments = [
     content: 'This challenge really helped me build a consistent coding habit!',
     createdAt: '2024-02-10T09:00:00Z',
     user: {
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl
     }
   },
   {
@@ -652,8 +434,8 @@ export const mockComments = [
     content: 'Day 15 and still going strong! Great challenge!',
     createdAt: '2024-02-15T14:30:00Z',
     user: {
-      username: mockUsers['user3'].username,
-      avatarUrl: mockUsers['user3'].avatarUrl
+      username: staticUserData['user3'].username,
+      avatarUrl: staticUserData['user3'].avatarUrl
     }
   },
   {
@@ -663,8 +445,8 @@ export const mockComments = [
     content: 'Love seeing everyone\'s artwork! Such creativity!',
     createdAt: '2024-02-16T10:15:00Z',
     user: {
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl
     }
   },
   {
@@ -674,8 +456,8 @@ export const mockComments = [
     content: 'This meditation challenge has really improved my focus',
     createdAt: '2024-02-14T16:45:00Z',
     user: {
-      username: mockUsers['user4'].username,
-      avatarUrl: mockUsers['user4'].avatarUrl
+      username: staticUserData['user4'].username,
+      avatarUrl: staticUserData['user4'].avatarUrl
     }
   },
   {
@@ -685,8 +467,8 @@ export const mockComments = [
     content: 'The book recommendations are fantastic! Already finished my second book.',
     createdAt: '2024-02-17T13:20:00Z',
     user: {
-      username: mockUsers['user7'].username,
-      avatarUrl: mockUsers['user7'].avatarUrl
+      username: staticUserData['user7'].username,
+      avatarUrl: staticUserData['user7'].avatarUrl
     }
   },
   {
@@ -696,8 +478,8 @@ export const mockComments = [
     content: 'My herbs are growing so well! This challenge is really rewarding.',
     createdAt: '2024-02-18T11:45:00Z',
     user: {
-      username: mockUsers['user6'].username,
-      avatarUrl: mockUsers['user6'].avatarUrl
+      username: staticUserData['user6'].username,
+      avatarUrl: staticUserData['user6'].avatarUrl
     }
   },
   {
@@ -707,8 +489,8 @@ export const mockComments = [
     content: 'The Thai curry I made yesterday was a huge hit with my family!',
     createdAt: '2024-02-19T16:30:00Z',
     user: {
-      username: mockUsers['user9'].username,
-      avatarUrl: mockUsers['user9'].avatarUrl
+      username: staticUserData['user9'].username,
+      avatarUrl: staticUserData['user9'].avatarUrl
     }
   },
   {
@@ -718,8 +500,8 @@ export const mockComments = [
     content: 'Learning so much about different cuisines and cooking techniques!',
     createdAt: '2024-02-20T10:15:00Z',
     user: {
-      username: mockUsers['user10'].username,
-      avatarUrl: mockUsers['user10'].avatarUrl
+      username: staticUserData['user10'].username,
+      avatarUrl: staticUserData['user10'].avatarUrl
     }
   }
 ];
@@ -750,8 +532,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'comp1',
       userId: 'user2',
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl,
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl,
       rating: 4.5,
       userRatings: { 'user1': 5, 'user3': 4, 'user4': 4, 'user5': 5 },
       likes: 12,
@@ -766,8 +548,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion2',
       userId: 'user3',
-      username: mockUsers['user3'].username,
-      avatarUrl: mockUsers['user3'].avatarUrl,
+      username: staticUserData['user3'].username,
+      avatarUrl: staticUserData['user3'].avatarUrl,
       rating: 5,
       userRatings: { 'user1': 5, 'user2': 5, 'user4': 5, 'user5': 5, 'user6': 5 },
       likes: 45,
@@ -784,8 +566,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion3',
       userId: 'user1',
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl,
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl,
       rating: 4,
       userRatings: { 'user2': 4, 'user3': 4, 'user4': 4, 'user5': 4 },
       likes: 28,
@@ -802,8 +584,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion4',
       userId: 'user4',
-      username: mockUsers['user4'].username,
-      avatarUrl: mockUsers['user4'].avatarUrl,
+      username: staticUserData['user4'].username,
+      avatarUrl: staticUserData['user4'].avatarUrl,
       rating: 5,
       userRatings: { 'user1': 5, 'user2': 5, 'user3': 5, 'user5': 5, 'user6': 5 },
       likes: 56,
@@ -818,8 +600,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion16',
       userId: 'user6',
-      username: mockUsers['user6'].username,
-      avatarUrl: mockUsers['user6'].avatarUrl,
+      username: staticUserData['user6'].username,
+      avatarUrl: staticUserData['user6'].avatarUrl,
       rating: 4.7,
       userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
       likes: 38,
@@ -836,8 +618,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion5',
       userId: 'user1',
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl,
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl,
       rating: 4.8,
       userRatings: { 'user2': 5, 'user3': 5, 'user4': 4, 'user5': 5 },
       likes: 34,
@@ -852,8 +634,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion6',
       userId: 'user3',
-      username: mockUsers['user3'].username,
-      avatarUrl: mockUsers['user3'].avatarUrl,
+      username: staticUserData['user3'].username,
+      avatarUrl: staticUserData['user3'].avatarUrl,
       rating: 4.9,
       userRatings: { 'user1': 5, 'user2': 5, 'user4': 5, 'user5': 4, 'user6': 5 },
       likes: 41,
@@ -870,8 +652,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion7',
       userId: 'user2',
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl,
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl,
       rating: 4.7,
       userRatings: { 'user1': 5, 'user3': 4, 'user4': 5, 'user5': 5, 'user6': 4 },
       likes: 29,
@@ -888,8 +670,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion8',
       userId: 'user1',
-      username: mockUsers['user1'].username,
-      avatarUrl: mockUsers['user1'].avatarUrl,
+      username: staticUserData['user1'].username,
+      avatarUrl: staticUserData['user1'].avatarUrl,
       rating: 5,
       userRatings: { 'user2': 5, 'user3': 5, 'user4': 5, 'user5': 5, 'user6': 5, 'user7': 5 },
       likes: 62,
@@ -904,8 +686,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion9',
       userId: 'user4',
-      username: mockUsers['user4'].username,
-      avatarUrl: mockUsers['user4'].avatarUrl,
+      username: staticUserData['user4'].username,
+      avatarUrl: staticUserData['user4'].avatarUrl,
       rating: 4.9,
       userRatings: { 'user1': 5, 'user2': 5, 'user3': 5, 'user5': 4, 'user6': 5 },
       likes: 45,
@@ -922,8 +704,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion10',
       userId: 'user4',
-      username: mockUsers['user4'].username,
-      avatarUrl: mockUsers['user4'].avatarUrl,
+      username: staticUserData['user4'].username,
+      avatarUrl: staticUserData['user4'].avatarUrl,
       rating: 4.8,
       userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user5': 5, 'user6': 4 },
       likes: 38,
@@ -940,8 +722,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion11',
       userId: 'user5',
-      username: mockUsers['user5'].username,
-      avatarUrl: mockUsers['user5'].avatarUrl,
+      username: staticUserData['user5'].username,
+      avatarUrl: staticUserData['user5'].avatarUrl,
       rating: 0,
       userRatings: {},
       likes: 0,
@@ -956,8 +738,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion12',
       userId: 'user9',
-      username: mockUsers['user9'].username,
-      avatarUrl: mockUsers['user9'].avatarUrl,
+      username: staticUserData['user9'].username,
+      avatarUrl: staticUserData['user9'].avatarUrl,
       rating: 4.5,
       userRatings: { 'user1': 5, 'user2': 4, 'user3': 4, 'user4': 5 },
       likes: 23,
@@ -974,8 +756,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion13',
       userId: 'user2',
-      username: mockUsers['user2'].username,
-      avatarUrl: mockUsers['user2'].avatarUrl,
+      username: staticUserData['user2'].username,
+      avatarUrl: staticUserData['user2'].avatarUrl,
       rating: 4.8,
       userRatings: { 'user1': 5, 'user3': 5, 'user4': 4, 'user5': 5, 'user6': 5 },
       likes: 47,
@@ -990,8 +772,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion15',
       userId: 'user7',
-      username: mockUsers['user7'].username,
-      avatarUrl: mockUsers['user7'].avatarUrl,
+      username: staticUserData['user7'].username,
+      avatarUrl: staticUserData['user7'].avatarUrl,
       rating: 4.6,
       userRatings: { 'user1': 5, 'user2': 4, 'user3': 5, 'user4': 4, 'user5': 5 },
       likes: 31,
@@ -1008,8 +790,8 @@ export const mockCompletions: CompletionsMap = {
     {
       id: 'completion14',
       userId: 'user3',
-      username: mockUsers['user3'].username,
-      avatarUrl: mockUsers['user3'].avatarUrl,
+      username: staticUserData['user3'].username,
+      avatarUrl: staticUserData['user3'].avatarUrl,
       rating: 0,
       userRatings: {},
       likes: 0,

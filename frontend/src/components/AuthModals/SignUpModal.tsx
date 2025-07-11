@@ -40,7 +40,12 @@ export default function SignUpModal({
       return;
     }
 
-    if (email && !isValidEmail(email)) {
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       setError("Please enter a valid email address.");
       return;
     }
@@ -48,7 +53,8 @@ export default function SignUpModal({
     try {
       setError("");
       // Try to sign up with the auth provider
-      await signUp(username, password, email);
+      // signUp expects (email, password, username, firstName?, lastName?)
+      await signUp(email, password, username, firstName || undefined, lastName || undefined);
       
       // Clear form
       setUsername("");
@@ -58,7 +64,7 @@ export default function SignUpModal({
       setLastName("");
       onClose();
     } catch (err) {
-      setError("Failed to create account. Username might already exist.");
+      setError("Failed to create account. Username or email might already exist.");
     }
   };
 
@@ -120,7 +126,7 @@ export default function SignUpModal({
         />
 
         <TextField
-          label="Email (optional)"
+          label="Email *"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
