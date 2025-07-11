@@ -2,6 +2,7 @@ package backend.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.data.domain.Persistable;
 
 import java.util.UUID;
 import java.time.OffsetDateTime;
@@ -14,7 +15,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserEntity {
+public class UserEntity implements Persistable<UUID> {
 
     @Id
     private UUID id;
@@ -49,5 +50,10 @@ public class UserEntity {
         if (createdAt == null) {
             createdAt = OffsetDateTime.now();
         }
+    }
+
+    @Override
+    public boolean isNew() {
+        return (createdAt == null);
     }
 }

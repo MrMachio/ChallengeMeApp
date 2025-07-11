@@ -6,6 +6,7 @@ import backend.exception.ConflictException;
 import backend.exception.NotFoundException;
 import backend.mapper.UserMapper;
 import backend.model.UserEntity;
+import backend.model.UserStatsEntity;
 import backend.repository.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -44,6 +45,18 @@ public class UserService {
         UUID userId = keycloakClient.createUser(userMapper.toKeycloakDto(registerRequestDTO));
 
         UserEntity entity = userMapper.toEntity(userId, registerRequestDTO);
+
+        UserStatsEntity stats = UserStatsEntity.builder()
+                .userId(userId)
+                .points(0)
+                .createdChallengesCount(0)
+                .completeChallengesCount(0)
+                .activeChallengesCount(0)
+                .savedChallengesCount(0)
+                .submissionsCount(0)
+                .build();
+        entity.setStats(stats);
+
         UserEntity saved = userRepository.save(entity);
 
         log.info("User with username {} has been successfully created", saved.getUsername());

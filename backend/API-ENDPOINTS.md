@@ -1,6 +1,20 @@
 ENDPOINTS
 
-___
+look at Postman for more info (request and response body formats)
+
+IMPLEMENTED SO FAR:
+
+````
+POST auth/register
+
+POST auth/login
+
+POST auth/refresh
+````
+
+_____
+
+NOT IMPLEMENTED - DON'T READ:
 
 **CHALLENGES**
 
