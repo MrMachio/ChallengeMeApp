@@ -41,11 +41,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import SendIcon from '@mui/icons-material/Send'
 import ChallengeCard, { ChallengeCardSkeleton } from '@/components/ChallengeCard'
 import UserCard, { UserCardSkeleton } from '@/components/UserCard'
-import { mockUsers, mockChallenges } from '@/lib/mock/data'
+import { mockChallenges } from '@/lib/mock/data'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createSkeletonArray } from '@/lib/utils'
 import { friendsApi, notificationsApi } from '@/lib/api/friends'
 import type { User, FriendRequest } from '@/lib/api/friends'
+// Временно отключаем RTK Query, так как эндпоинт не реализован
+// import { useGetUserByUsernameQuery } from '@/lib/store/api/usersApi'
 import UsersFilters from '@/components/UsersFilters'
 import type { UserSortConfig, UserSortField, UserFilterType } from '@/app/users/page'
 import { TextFieldStyled } from '@/components/Filters/styledWrappers'
@@ -90,8 +92,6 @@ export default function Profile({ params }: ProfileProps) {
   const [userSearch, setUserSearch] = useState('') // Search for users
   const [userSortConfig, setUserSortConfig] = useState<UserSortConfig>({ field: 'none', direction: 'desc' })
   const [userFilterType, setUserFilterType] = useState<UserFilterType>('friends')
-  const [isLoading, setIsLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
   const [userChallenges, setUserChallenges] = useState({
     active: [] as typeof mockChallenges,
     pending: [] as typeof mockChallenges,
@@ -103,70 +103,69 @@ export default function Profile({ params }: ProfileProps) {
   const [userFriends, setUserFriends] = useState<User[]>([])
   const [friendRequests, setFriendRequests] = useState<{ sent: FriendRequest[]; received: FriendRequest[] }>({ sent: [], received: [] })
   const [isLoadingFriends, setIsLoadingFriends] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Временное решение: показываем профиль только для текущего пользователя
+  // TODO: когда будет реализован GET /users/username/{username}, убрать эту проверку
+  const user = currentUser && currentUser.username === params.username ? currentUser : null
+  const error = !user && !isLoading ? { status: 404 } : null
 
   const isCurrentUser = user?.id === currentUser?.id
 
-  // Load user data
+  // Simulate loading time for better UX
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Handle user not found
+  if (error && 'status' in error && error.status === 404) {
+    notFound()
+  }
+
+  // Load user challenges and friends data
   useEffect(() => {
     const loadProfileData = async () => {
-      setIsLoading(true)
+      if (!user) return
       
-      // Find user by username
-      const foundUser = Object.values(mockUsers).find(u => u.username === params.username)
-      
-      if (!foundUser) {
-        notFound()
-        return
-      }
-      
-      setUser(foundUser)
-      
-      // Get current data from localStorage if this is the current user
-      let currentUserData = foundUser
-      if (foundUser.id === currentUser?.id && currentUser) {
-        // Use current data from useAuth, casting to mock user type
-        currentUserData = {
-          ...foundUser,
-          ...currentUser,
-          avatarUrl: currentUser.avatarUrl || '/images/avatars/default.svg'
-        }
-      }
-      
-      // Filter user challenges
+      // Filter user challenges - using mock data for now
       const challenges = {
-        active: mockChallenges.filter(c => currentUserData?.activeChallenges?.includes(c.id) || false),
-        pending: mockChallenges.filter(c => (currentUserData as any)?.pendingChallenges?.includes(c.id) || false),
-        completed: mockChallenges.filter(c => currentUserData?.completedChallenges?.includes(c.id) || false),
-        created: mockChallenges.filter(c => c.creatorId === currentUserData?.id),
-        favorites: mockChallenges.filter(c => (currentUserData as any)?.favoritesChallenges?.includes(c.id) || false),
-        received: mockChallenges.filter(c => (currentUserData as any)?.receivedChallenges?.includes(c.id) || false)
+        active: mockChallenges.filter(c => user.activeChallenges?.includes(c.id) || false),
+        pending: mockChallenges.filter(c => user.pendingChallenges?.includes(c.id) || false),
+        completed: mockChallenges.filter(c => user.completedChallenges?.includes(c.id) || false),
+        created: mockChallenges.filter(c => c.creatorId === user.id),
+        favorites: mockChallenges.filter(c => user.favoritesChallenges?.includes(c.id) || false),
+        received: [] // TODO: Add receivedChallenges field to User type
       }
       
       setUserChallenges(challenges)
       
-      // Load friends data if this is current user or if we want to show their friends
-      if (currentUserData?.id) {
+      // Load friends data
+      if (user.id) {
         setIsLoadingFriends(true)
         try {
           const [friendsData, requestsData] = await Promise.all([
-            friendsApi.getFriends(currentUserData.id),
-            friendsApi.getPendingRequests(currentUserData.id)
+            friendsApi.getFriends(user.id),
+            friendsApi.getPendingRequests(user.id)
           ])
           setUserFriends(friendsData)
           setFriendRequests(requestsData)
         } catch (error) {
           console.error('Error loading friends data:', error)
+          // Устанавливаем пустые данные в случае ошибки
+          setUserFriends([])
+          setFriendRequests({ sent: [], received: [] })
         } finally {
           setIsLoadingFriends(false)
         }
       }
-      
-      setIsLoading(false)
     }
 
     loadProfileData()
     
-    // Listen for changes for current user
+    // Listen for changes
     const handleUserUpdate = () => {
       loadProfileData()
     }
@@ -194,7 +193,7 @@ export default function Profile({ params }: ProfileProps) {
         handleToggleFavorite(e.detail.challengeId, e.detail.isFavorite)
       })
     }
-  }, [params.username, currentUser])
+  }, [user, currentUser])
 
   // Handle friend request actions
   const handleAcceptFriendRequest = async (requestId: string) => {
@@ -206,14 +205,15 @@ export default function Profile({ params }: ProfileProps) {
         // Update state locally without reloading
         const acceptedRequest = friendRequests.received.find(r => r.id === requestId)
         if (acceptedRequest) {
-          const newFriend = Object.values(mockUsers).find(u => u.id === acceptedRequest.senderId)
-          if (newFriend) {
-            setUserFriends(prev => [...prev, newFriend])
-            setFriendRequests(prev => ({
-              ...prev,
-              received: prev.received.filter(r => r.id !== requestId)
-            }))
-          }
+          // TODO: когда будет API для получения пользователей, заменить на реальный запрос
+          // const newFriend = await usersApi.getUserById(acceptedRequest.senderId)
+          console.log('Friend request accepted, but user data fetching not implemented yet')
+          
+          // Пока просто убираем запрос из списка
+          setFriendRequests(prev => ({
+            ...prev,
+            received: prev.received.filter(r => r.id !== requestId)
+          }))
         }
       }
     } catch (error) {
@@ -346,10 +346,30 @@ export default function Profile({ params }: ProfileProps) {
         users = userFriends
         break
       case 1: // Friend Requests
+        // TODO: когда будет API для получения пользователей, заменить на реальные запросы
         users = friendRequests.received.map(req => {
-          const sender = Object.values(mockUsers).find(u => u.id === req.senderId)
-          return sender
-        }).filter(Boolean) as User[]
+          // Временное решение: создаем фиктивного пользователя
+          return {
+            id: req.senderId,
+            username: `user_${req.senderId.slice(0, 8)}`,
+            email: `user_${req.senderId.slice(0, 8)}@example.com`,
+            fullName: `User ${req.senderId.slice(0, 8)}`,
+            avatarUrl: '/images/avatars/default.svg',
+            points: 0,
+            completedChallenges: [],
+            activeChallenges: [],
+            createdChallenges: [],
+            pendingChallenges: [],
+            favoritesChallenges: [],
+            receivedChallenges: [],
+            friends: [],
+            friendRequests: { sent: [], received: [] },
+            followers: 0,
+            following: 0,
+            lastSeen: new Date().toISOString(),
+            isOnline: false,
+          } as User
+        })
         break
       default:
         users = []
@@ -500,7 +520,7 @@ export default function Profile({ params }: ProfileProps) {
           sx={{ 
             display: 'flex', 
             alignItems: 'center', 
-            gap: 1.5, 
+            gap: 2.5, 
             pr: 6,
             position: 'relative',
             zIndex: 0
@@ -510,8 +530,8 @@ export default function Profile({ params }: ProfileProps) {
             src={user.avatarUrl || '/images/avatars/default.svg'}
             alt={user.username}
             sx={{ 
-              width: 60, 
-              height: 60,
+              width: 80, 
+              height: 80,
               cursor: 'pointer',
               transition: 'transform 0.2s',
               '&:hover': {
@@ -521,47 +541,65 @@ export default function Profile({ params }: ProfileProps) {
           />
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <Typography 
-              variant="h6"
+              variant="h4"
               sx={{
                 fontWeight: 700,
                 color: 'text.primary',
-                fontSize: '1.1rem',
+                fontSize: '1.8rem',
                 lineHeight: 1.2,
-                mb: 0.25
+                mb: 1.5
               }}
             >
               {user.username}
             </Typography>
             {user.fullName && (
-              <Typography 
-                variant="body2" 
-                color="text.secondary"
-                sx={{ 
-                  fontWeight: 500,
-                  fontSize: '0.9rem',
-                  lineHeight: 1.2,
-                  mb: 1
-                }}
-              >
-                {user.fullName}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                <Typography 
+                  variant="h6" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {user.fullName}
+                </Typography>
+                <Chip
+                  icon={<EmojiEventsIcon sx={{ fontSize: '14px' }} />}
+                  label={`${user.points} points`}
+                  sx={{
+                    bgcolor: '#F59E0B',
+                    color: 'white',
+                    fontSize: '0.875rem',
+                    fontWeight: 500,
+                    height: '24px',
+                    px: 1.5,
+                    '& .MuiChip-icon': {
+                      color: 'white'
+                    }
+                  }}
+                />
+              </Box>
             )}
-            <Chip
-              icon={<EmojiEventsIcon sx={{ fontSize: '14px' }} />}
-              label={`${user.points} points`}
-              size="small"
-              sx={{
-                bgcolor: '#F59E0B',
-                color: 'white',
-                fontSize: '0.7rem',
-                fontWeight: 500,
-                height: '24px',
-                width: 'fit-content',
-                '& .MuiChip-icon': {
-                  color: 'white'
-                }
-              }}
-            />
+            {!user.fullName && (
+              <Chip
+                icon={<EmojiEventsIcon sx={{ fontSize: '14px' }} />}
+                label={`${user.points} points`}
+                sx={{
+                  bgcolor: '#F59E0B',
+                  color: 'white',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  height: '24px',
+                  px: 1.5,
+                  width: 'fit-content',
+                  '& .MuiChip-icon': {
+                    color: 'white'
+                  }
+                }}
+              />
+            )}
           </Box>
         </Box>
 
@@ -882,7 +920,7 @@ export default function Profile({ params }: ProfileProps) {
         onClose={() => setDrawerOpen(false)}
         PaperProps={{
           sx: {
-            width: 320,
+            width: 455,
             p: 3,
             backgroundColor: 'background.paper',
             borderLeft: '1px solid',
@@ -906,49 +944,98 @@ export default function Profile({ params }: ProfileProps) {
         </Box>
 
         {/* User Info */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mb: 5 }}>
           <Avatar
             src={user.avatarUrl || '/images/avatars/default.svg'}
             alt={user.username}
             sx={{ 
-              width: 100, 
-              height: 100
+              width: 90, 
+              height: 90,
+              cursor: 'pointer',
+              transition: 'transform 0.2s',
+              '&:hover': {
+                transform: 'scale(1.05)'
+              }
             }}
           />
-          <Box>
-            <Typography variant="h5" sx={{ mb: 1, fontWeight: 'bold', color: 'text.primary' }}>
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+            <Typography 
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'text.primary',
+                fontSize: '2rem',
+                lineHeight: 1.2,
+                mb: 2
+              }}
+            >
               {user.username}
             </Typography>
-            <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
-              {user.fullName}
-            </Typography>
-            <Chip
-              icon={<EmojiEventsIcon sx={{ fontSize: '16px' }} />}
-              label={`${user.points} points`}
-              sx={{
-                bgcolor: '#F59E0B',
-                color: 'white',
-                fontWeight: 'bold',
-                '& .MuiChip-icon': {
-                  color: 'white'
-                }
-              }}
-            />
+            {user.fullName && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Typography 
+                  variant="h6" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontWeight: 500,
+                    fontSize: '1.1rem',
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {user.fullName}
+                </Typography>
+                <Chip
+                  icon={<EmojiEventsIcon sx={{ fontSize: '18px' }} />}
+                  label={`${user.points} points`}
+                  sx={{
+                    bgcolor: '#F59E0B',
+                    color: 'white',
+                    fontSize: '1.1rem',
+                    fontWeight: 500,
+                    height: '32px',
+                    px: 2,
+                    '& .MuiChip-icon': {
+                      color: 'white'
+                    }
+                  }}
+                />
+              </Box>
+            )}
+            {!user.fullName && (
+              <Chip
+                icon={<EmojiEventsIcon sx={{ fontSize: '18px' }} />}
+                label={`${user.points} points`}
+                sx={{
+                  bgcolor: '#F59E0B',
+                  color: 'white',
+                  fontSize: '1.1rem',
+                  fontWeight: 500,
+                  height: '32px',
+                  px: 2,
+                  width: 'fit-content',
+                  '& .MuiChip-icon': {
+                    color: 'white'
+                  }
+                }}
+              />
+            )}
           </Box>
         </Box>
 
         {/* Edit Options for Current User */}
         {isCurrentUser && (
           <>
-            <Divider sx={{ my: 2 }} />
-            <Stack spacing={1} sx={{ mb: 4 }}>
+            <Divider sx={{ my: 3 }} />
+            <Stack spacing={2} sx={{ mb: 5 }}>
               <Button
                 fullWidth
-                startIcon={<PhotoCameraIcon />}
+                startIcon={<PhotoCameraIcon sx={{ fontSize: '1.8rem' }} />}
                 onClick={handleChangeProfilePicture}
                 sx={{ 
                   color: 'text.primary', 
                   justifyContent: 'flex-start',
+                  fontSize: '1.3rem',
+                  py: 1.25,
                   '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
@@ -956,11 +1043,13 @@ export default function Profile({ params }: ProfileProps) {
               </Button>
               <Button
                 fullWidth
-                startIcon={<PersonIcon />}
+                startIcon={<PersonIcon sx={{ fontSize: '1.8rem' }} />}
                 onClick={handleChangeFullName}
                 sx={{ 
                   color: 'text.primary', 
                   justifyContent: 'flex-start',
+                  fontSize: '1.3rem',
+                  py: 1.25,
                   '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
@@ -968,11 +1057,13 @@ export default function Profile({ params }: ProfileProps) {
               </Button>
               <Button
                 fullWidth
-                startIcon={<EditIcon />}
+                startIcon={<EditIcon sx={{ fontSize: '1.8rem' }} />}
                 onClick={handleChangeUsername}
                 sx={{ 
                   color: 'text.primary', 
                   justifyContent: 'flex-start',
+                  fontSize: '1.3rem',
+                  py: 1.25,
                   '&:hover': { backgroundColor: 'action.hover' }
                 }}
               >
@@ -983,52 +1074,52 @@ export default function Profile({ params }: ProfileProps) {
         )}
 
         {/* Statistics */}
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold', color: 'text.primary' }}>
+        <Divider sx={{ my: 3 }} />
+        <Typography variant="h6" sx={{ mb: 3, fontWeight: 'bold', color: 'text.primary', fontSize: '1.5rem' }}>
           Statistics
         </Typography>
-        <Stack spacing={2}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <GroupIcon />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Active:</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+        <Stack spacing={3}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <GroupIcon sx={{ fontSize: '1.8rem' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>Active:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '1.3rem' }}>
                 {userChallenges.active.length}
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <EmojiEventsIcon />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Completed:</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <EmojiEventsIcon sx={{ fontSize: '1.8rem' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>Completed:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '1.3rem' }}>
                 {userChallenges.completed.length}
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CreateIcon />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Created:</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <CreateIcon sx={{ fontSize: '1.8rem' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>Created:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '1.3rem' }}>
                 {userChallenges.created.length}
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <BookmarkIcon />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Favorites:</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <BookmarkIcon sx={{ fontSize: '1.8rem' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>Favorites:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '1.3rem' }}>
                 {userChallenges.favorites.length}
               </Typography>
             </Box>
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <SendIcon />
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>Received:</Typography>
-              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <SendIcon sx={{ fontSize: '1.8rem' }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '1.3rem' }}>Received:</Typography>
+              <Typography variant="body1" sx={{ fontWeight: 500, color: 'text.primary', fontSize: '1.3rem' }}>
                 {userChallenges.received.length}
               </Typography>
             </Box>

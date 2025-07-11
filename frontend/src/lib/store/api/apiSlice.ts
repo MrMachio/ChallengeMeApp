@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 // Define our base API URL (you can change this to your backend URL)
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api'
 
 export const apiSlice = createApi({
   reducerPath: 'api',
@@ -9,7 +9,7 @@ export const apiSlice = createApi({
     baseUrl,
     prepareHeaders: (headers, { getState }) => {
       // Add authorization header if token exists
-      const token = localStorage.getItem('authToken')
+      const token = localStorage.getItem('accessToken')
       if (token) {
         headers.set('authorization', `Bearer ${token}`)
       }

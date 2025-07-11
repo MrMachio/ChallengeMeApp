@@ -1,24 +1,9 @@
 import { apiSlice } from './apiSlice'
+import { User } from '../../../lib/hooks/useAuth'
 
-// Minimal auth types
-export interface User {
-  id: string
-  username: string
-  email: string
-  firstName?: string
-  lastName?: string
-  avatarUrl?: string
-  createdAt: string
-  points: number
-  activeChallenges: string[]
-  pendingChallenges: string[]
-  completedChallenges: string[]
-  favoritesChallenges: string[]
-  createdChallenges: string[]
-}
-
+// Login and Registration interfaces
 export interface LoginRequest {
-  email: string
+  username: string // Changed from email to username
   password: string
 }
 
@@ -30,16 +15,20 @@ export interface RegisterRequest {
   lastName?: string
 }
 
-export interface LoginResponse {
+export interface AuthResponse {
   user: User
-  token: string
-  expiresIn: number
+  token: {
+    accessToken: string
+    expiresAt: string
+    refreshToken: string
+    refreshExpiresAt: string
+  }
 }
 
 export const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // 1. User login
-    login: builder.mutation<LoginResponse, LoginRequest>({
+    // User login
+    login: builder.mutation<AuthResponse, LoginRequest>({
       query: (credentials) => ({
         url: '/auth/login',
         method: 'POST',
@@ -48,8 +37,8 @@ export const authApi = apiSlice.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
-    // 2. User registration  
-    register: builder.mutation<LoginResponse, RegisterRequest>({
+    // User registration  
+    register: builder.mutation<AuthResponse, RegisterRequest>({
       query: (userData) => ({
         url: '/auth/register',
         method: 'POST',
@@ -58,16 +47,13 @@ export const authApi = apiSlice.injectEndpoints({
       invalidatesTags: ['User'],
     }),
 
-    // 3. Get current user
-    getCurrentUser: builder.query<User, void>({
-      query: () => '/auth/me',
-      providesTags: ['User'],
-    }),
-
-    // 4. Get user by username (used in Profile page)
-    getUserByUsername: builder.query<User, string>({
-      query: (username) => `/users/username/${username}`,
-      providesTags: (result, error, username) => [{ type: 'User', id: username }],
+    // Refresh token
+    refreshToken: builder.mutation<{ accessToken: string; refreshToken: string; expiresAt: string; refreshExpiresAt: string }, { refreshToken: string }>({
+      query: (data) => ({
+        url: '/auth/refresh',
+        method: 'POST',
+        body: data,
+      }),
     }),
   }),
 })
@@ -75,6 +61,5 @@ export const authApi = apiSlice.injectEndpoints({
 export const {
   useLoginMutation,
   useRegisterMutation,
-  useGetCurrentUserQuery,
-  useGetUserByUsernameQuery,
+  useRefreshTokenMutation,
 } = authApi 
