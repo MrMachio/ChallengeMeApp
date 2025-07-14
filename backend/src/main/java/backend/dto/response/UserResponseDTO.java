@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public record UserResponseDTO (
-        UUID id,
+       UUID              id,
        String            username,
        String            email,
        String            firstName,

@@ -7,21 +7,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ChallengeRepository extends JpaRepository<ChallengeEntity, UUID> {
-    Page<ChallengeEntity> findByCategoryAndDifficultyOrderByLikesCountDesc(
+    List<ChallengeEntity> findByCategoryAndDifficultyOrderByLikesCountDesc(
             ChallengeCategory category,
-            ChallengeDifficulty difficulty,
-            Pageable pageable);
+            ChallengeDifficulty difficulty);
 
-    Page<ChallengeEntity> findByCategoryAndDifficultyOrderBySubmissionsCountDesc(
+    List<ChallengeEntity> findByCategoryAndDifficultyOrderBySubmissionsCountDesc(
             ChallengeCategory category,
-            ChallengeDifficulty difficulty,
-            Pageable pageable);
+            ChallengeDifficulty difficulty);
 
-    Page<ChallengeEntity> findByCategoryAndDifficultyOrderByPointsDesc(
+    List<ChallengeEntity> findByCategoryAndDifficultyOrderByPointsDesc(
             ChallengeCategory category,
-            ChallengeDifficulty difficulty,
-            Pageable pageable);
+            ChallengeDifficulty difficulty);
 }

@@ -61,7 +61,7 @@ public class KeycloakClient {
             log.warn("Keycloak login failed: {} - {}", e.getStatusCode(), e.getResponseBodyAsString());
             throw new ResponseStatusException(e.getStatusCode(), e.getResponseBodyAsString(), e);
         } catch (WebClientRequestException ex) {
-            log.error("Could not reach Keycloak for issuing a new user token: {}", ex.getMessage());
+            log.error("C`ould not reach Keycloak for issuing a new user token: {}", ex.getMessage());
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Keycloak is unavailable", ex);
         }
     }

@@ -3,6 +3,8 @@ package backend.model;
 import backend.model.enums.ConnectionType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -33,6 +35,7 @@ public class UserChallengeConnectionEntity {
     @EqualsAndHashCode.Include
     @Enumerated(EnumType.STRING)
     @Column(name = "\"type\"", columnDefinition = "connection_type")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private ConnectionType connectionType;
 
     @Column(name = "ts", nullable = false, updatable = false)
@@ -53,6 +56,7 @@ public class UserChallengeConnectionEntity {
     public static class Pk implements Serializable {
         private UUID userId;
         private UUID challengeId;
+
         private ConnectionType connectionType;
     }
 

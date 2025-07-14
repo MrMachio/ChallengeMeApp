@@ -10,10 +10,12 @@ import backend.model.UserStatsEntity;
 import backend.repository.UserRepository;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,6 +33,11 @@ public class UserService {
 
         return userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("No local user with id " + userId));
+    }
+
+    public UserEntity findById(UUID id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
     }
 
     public UserResponseDTO createUser(RegisterRequestDTO registerRequestDTO) {
