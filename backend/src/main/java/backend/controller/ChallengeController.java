@@ -50,4 +50,17 @@ public class ChallengeController {
         return challengeService.listChallenges(queryDTO, userId);
     }
 
+    @PatchMapping("/{challengeId}/save")
+    public void saveChallenge(@PathVariable UUID challengeId, @AuthenticationPrincipal Jwt jwt) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+        challengeService.saveChallenge(challengeId, userId);
+    }
+
+    @PatchMapping("/{challengeId}/unsave")
+    public void unsaveChallenge(@PathVariable UUID challengeId, @AuthenticationPrincipal Jwt jwt) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+        challengeService.unsaveChallenge(challengeId, userId);
+    }
 }
