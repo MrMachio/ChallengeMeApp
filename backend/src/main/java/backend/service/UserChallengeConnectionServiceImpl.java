@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.response.ChallengeSummaryDTO;
 import backend.model.UserChallengeConnectionEntity;
+import backend.model.UserEntity;
 import backend.model.enums.ConnectionType;
 import backend.repository.UserChallengeConnectionRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserChallengeConnectionServiceImpl implements UserChallengeConnectionService{
     private final UserChallengeConnectionRepository connRepo;
+    private final UserService userService;
 
     @Override
     public List<ChallengeSummaryDTO> getChallengesForUserByConnectionType(UUID userId, ConnectionType connType) {
@@ -35,6 +37,13 @@ public class UserChallengeConnectionServiceImpl implements UserChallengeConnecti
         log.info("Successfully established connection of type [{}] between user and challenge at ts -> {}"
                 , connType.toString(), saved.getTimestamp().toString());
         return saved;
+    }
+
+    @Override
+    public UserEntity getAuthorForChallenge(UUID challengeId) {
+        List<UserChallengeConnectionEntity> connList = connRepo.findByChallengeIdAndConnectionType(challengeId, ConnectionType.author);
+        UserChallengeConnectionEntity authorConn = connList.getFirst();
+        return authorConn.getUser();
     }
 
     @Override
