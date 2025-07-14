@@ -4,6 +4,8 @@ import backend.model.enums.ChallengeCategory;
 import backend.model.enums.ChallengeDifficulty;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -31,13 +33,18 @@ public class ChallengeEntity {
     @Column(columnDefinition = "text")
     private String description;
 
-    private String image;
+    @Column(name = "image")
+    private String coverImageUrl;
     private int points;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "challenge_category")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private ChallengeCategory category;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "challenge_difficulty")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private ChallengeDifficulty difficulty;
 
     private int likesCount;

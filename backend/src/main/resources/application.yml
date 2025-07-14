@@ -11,6 +11,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    properties:
+      hibernate.type.prefer_native_enum_type: true
     show-sql: true
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 
