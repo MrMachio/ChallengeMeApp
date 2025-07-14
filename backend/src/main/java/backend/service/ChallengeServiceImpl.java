@@ -55,6 +55,14 @@ public class ChallengeServiceImpl implements ChallengeService{
     }
 
     @Override
+    public ChallengeDetailsDTO viewChallenge(UUID challengeId) {
+        ChallengeEntity challenge = getChallengeById(challengeId);
+        UserEntity author = connService.getAuthorForChallenge(challengeId);
+
+        return challengeMapper.toDetailsDTO(challenge, author.getId(), author.getUsername(), author.getAvatarUrl());
+    }
+
+    @Override
     public void likeChallenge(UUID challengeId) {
 
     }

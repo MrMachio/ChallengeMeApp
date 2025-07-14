@@ -16,6 +16,8 @@ public interface ChallengeService {
 
     ChallengeDetailsDTO createChallenge(CreateChallengeRequestDTO req, UUID userId);
 
+    ChallengeDetailsDTO viewChallenge(UUID challengeId);
+
     void likeChallenge(UUID challengeId);
     void saveChallenge(UUID challengeId, UUID userId);
     void acceptChallenge(UUID challengeId, UUID userId);

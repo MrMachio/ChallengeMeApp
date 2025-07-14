@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.response.ChallengeSummaryDTO;
 import backend.model.UserChallengeConnectionEntity;
+import backend.model.UserEntity;
 import backend.model.enums.ConnectionType;
 
 import java.util.List;
@@ -12,10 +13,8 @@ public interface UserChallengeConnectionService {
 
     UserChallengeConnectionEntity createUserChallengeConnection(UUID userId, UUID challengeId, ConnectionType connType);
 
+    UserEntity getAuthorForChallenge(UUID challengeId);
+
     void deleteUserChallengeConnection(UUID userId, UUID challengeId, ConnectionType connType);
-
-
-
-
 
 }
