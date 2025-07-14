@@ -20,6 +20,8 @@ public interface ChallengeService {
 
     void likeChallenge(UUID challengeId);
     void saveChallenge(UUID challengeId, UUID userId);
+    void unsaveChallenge(UUID challengeId, UUID userId);
+
     void acceptChallenge(UUID challengeId, UUID userId);
 
     // Called by submissionService on pending submission

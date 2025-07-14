@@ -100,7 +100,12 @@ public class ChallengeServiceImpl implements ChallengeService{
 
     @Override
     public void saveChallenge(UUID challengeId, UUID userId) {
+        connService.createUserChallengeConnection(userId, challengeId, ConnectionType.saved);
+    }
 
+    @Override
+    public void unsaveChallenge(UUID challengeId, UUID userId) {
+        connService.deleteUserChallengeConnection(userId, challengeId, ConnectionType.saved);
     }
 
     @Override
