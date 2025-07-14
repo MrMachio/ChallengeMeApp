@@ -1,14 +1,59 @@
 // Central API types exports for minimal RTK Query setup
 // This file provides a single import point for all API-related types
 
-// Re-export all types from minimal API modules
-export type { Challenge, CreateChallengeRequest, ChallengeStatus, ProofSubmission } from '../store/api/challengesApi'
-export type { User, LoginRequest, RegisterRequest, LoginResponse } from '../store/api/authApi.minimal'
-export type { PaginatedUsers } from '../store/api/usersApi'
+// Import User type from useAuth hook
+import type { User } from '../hooks/useAuth'
+
+// Re-export User type and other auth types
+export type { User }
+export type { LoginRequest, RegisterRequest, AuthResponse } from '../store/api/authApi.minimal'
 export type { FriendRequest, FriendshipStatus } from '../store/api/friendsApi'
 export type { Message, Chat } from '../store/api/chatApi'
 
-// Legacy compatibility - these types might be used by existing components
+// Challenge related types
+export interface CreateChallengeRequest {
+  title: string
+  description: string
+  coverImageUrl?: string | null
+  points: number
+  category: string
+  difficulty: string
+}
+
+export interface Challenge {
+  id: string
+  title: string
+  description: string
+  category: string
+  difficulty: string
+  points: number
+  timeLimit: number | null
+  imageUrl: string | null
+  likesCount: number
+  completionsCount: number
+  creatorId: string
+  creator: {
+    username: string
+    avatarUrl: string
+  }
+  createdAt: string
+}
+
+export interface ChallengeStatus {
+  status: 'not_started' | 'in_progress' | 'completed' | 'failed'
+  startedAt?: string
+  completedAt?: string
+  proof?: ProofSubmission
+}
+
+export interface ProofSubmission {
+  text?: string
+  imageUrls?: string[]
+  videoUrl?: string
+  submittedAt: string
+}
+
+// User stats types
 export interface UserStats {
   totalChallenges: number
   completedChallenges: number
@@ -55,32 +100,4 @@ export interface Notification {
     [key: string]: any
   }
   actionUrl?: string
-}
-
-export interface CreateChallengeRequest {
-  title: string
-  description: string
-  coverImageUrl?: string | null
-  points: number
-  category: string
-  difficulty: string
-}
-
-export interface Challenge {
-  id: string
-  title: string
-  description: string
-  category: string
-  difficulty: string
-  points: number
-  timeLimit: number | null
-  imageUrl: string | null
-  likesCount: number
-  completionsCount: number
-  creatorId: string
-  creator: {
-    username: string
-    avatarUrl: string
-  }
-  createdAt: string
 } 
