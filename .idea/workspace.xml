@@ -5,25 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="eba9ed74-5057-4fbd-8b95-055895a89712" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/frontend/.next/app-build-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/app-build-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/build-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/build-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app-paths-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/app-paths-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/_not-found/page.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/_not-found/page_client-reference-manifest.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/app/page_client-reference-manifest.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/middleware-build-manifest.js" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/middleware-build-manifest.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/middleware-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/middleware-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/server/server-reference-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/server/server-reference-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/.next/trace" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/.next/trace" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/ThemeRegistry.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/AddFriendModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/LoginModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/NavBar.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/ProfileModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/components/SignUpModal.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/login/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/register/page.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/app/theme.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/backend/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/app/layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/app/layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/AuthModals/SignUpModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/AuthModals/SignUpModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/hooks/useAuth.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/providers/AuthProvider.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/lib/store/api/apiSlice.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/lib/store/api/apiSlice.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,6 +108,7 @@
       <workItem from="1751641250426" duration="861000" />
       <workItem from="1751656402197" duration="619000" />
       <workItem from="1751829536737" duration="7570000" />
+      <workItem from="1752218862794" duration="308000" />
     </task>
     <servers />
   </component>

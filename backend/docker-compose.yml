@@ -19,7 +19,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.3
     container_name: keycloak
-    command: start-dev
+    command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -28,6 +28,8 @@ services:
       KC_DB_URL_DATABASE: ${POSTGRES_DB_KEYCLOAK}
       KC_DB_USERNAME: ${POSTGRES_USER}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./ChallengeMeApp-realm.json:/opt/keycloak/data/import/ChallengeMeApp-realm.json:ro
     ports:
       - "8080:8080"
     depends_on:

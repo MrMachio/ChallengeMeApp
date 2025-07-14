@@ -55,4 +55,32 @@ export interface Notification {
     [key: string]: any
   }
   actionUrl?: string
+}
+
+export interface CreateChallengeRequest {
+  title: string
+  description: string
+  coverImageUrl?: string | null
+  points: number
+  category: string
+  difficulty: string
+}
+
+export interface Challenge {
+  id: string
+  title: string
+  description: string
+  category: string
+  difficulty: string
+  points: number
+  timeLimit: number | null
+  imageUrl: string | null
+  likesCount: number
+  completionsCount: number
+  creatorId: string
+  creator: {
+    username: string
+    avatarUrl: string
+  }
+  createdAt: string
 } 
