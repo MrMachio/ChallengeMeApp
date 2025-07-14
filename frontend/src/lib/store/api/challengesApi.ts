@@ -1,115 +1,188 @@
 import { apiSlice } from './apiSlice'
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
+import type { Challenge, CreateChallengeRequest } from '@/lib/types/api.types'
+import { addFavoriteToStorage, removeFavoriteFromStorage, isFavoriteInStorage } from '@/lib/utils/favorites'
 
-// Minimal types for challenges (only what's actually used)
-export interface Challenge {
-  id: string
-  title: string
-  description: string
-  category: string
-  difficulty: 'easy' | 'medium' | 'hard'
-  imageUrl: string
-  points: number
-  creatorId: string
-  createdAt: string
-  likesCount: number
-  completionsCount: number
-  creator: {
-    username: string
-    avatarUrl: string
+export type { Challenge, CreateChallengeRequest }
+
+export interface ChallengeFilters {
+  userConnectionType?: string
+  difficulty?: string
+  category?: string
+  sortType?: string
+}
+
+// Error handling helper
+const handleError = (error: FetchBaseQueryError | undefined) => {
+  if (error) {
+    if ('status' in error) {
+      if (error.status === 401) {
+        // Handle unauthorized error
+        const storage = typeof window !== 'undefined' ? window.localStorage : null
+        storage?.removeItem('accessToken')
+        storage?.removeItem('refreshToken')
+        window.location.href = '/login'
+      }
+      // Log other errors
+      console.error('API Error:', error)
+    }
   }
-}
-
-export interface CreateChallengeRequest {
-  title: string
-  description: string
-  category: string
-  difficulty: string
-  imageUrl: string
-  points: number
-}
-
-export interface ChallengeStatus {
-  status: 'none' | 'active' | 'pending' | 'completed'
-  proofUrl?: string
-  proofDescription?: string
-  submittedAt?: string
-  completedAt?: string
-}
-
-export interface ProofSubmission {
-  proofUrl?: string
-  description?: string
-  proofType?: 'image' | 'video'
 }
 
 export const challengesApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    // 1. Create new challenge (used in CreateChallengeModal)
+    // Get all challenges with filters
+    getChallenges: builder.query<Challenge[], ChallengeFilters>({
+      query: (filters) => ({
+        url: '/challenges',
+        method: 'GET',
+        params: {
+          userConnectionType: filters?.userConnectionType || 'saved',
+          difficulty: filters?.difficulty?.toLowerCase(),
+          category: filters?.category,
+          sortType: filters?.sortType
+        }
+      }),
+      transformErrorResponse: (error) => {
+        handleError(error)
+        return error
+      },
+      providesTags: ['Challenge']
+    }),
+
+    // Get single challenge by ID
+    getChallenge: builder.query<Challenge, string>({
+      query: (id) => `/challenges/${id}`,
+      transformErrorResponse: (error) => {
+        handleError(error)
+        return error
+      },
+      providesTags: (result, error, id) => [{ type: 'Challenge', id }]
+    }),
+
+    // Create new challenge
     createChallenge: builder.mutation<Challenge, CreateChallengeRequest>({
       query: (challenge) => ({
         url: '/challenges',
         method: 'POST',
-        body: challenge,
+        body: challenge
       }),
-      invalidatesTags: ['Challenge'],
+      transformErrorResponse: (error) => {
+        handleError(error)
+        return error
+      },
+      invalidatesTags: ['Challenge']
     }),
 
-    // 2. Get challenge status (used in useChallengeStatus hook)
-    getChallengeStatus: builder.query<ChallengeStatus, string>({
-      query: (challengeId) => `/challenges/${challengeId}/status`,
-      providesTags: (result, error, challengeId) => [
-        { type: 'Challenge', id: challengeId }
-      ],
-    }),
-
-    // 3. Update challenge status (used in useChallengeStatus hook)
-    updateChallengeStatus: builder.mutation<void, { 
-      challengeId: string
-      action: 'accept' | 'submit_proof' | 'approve' | 'reject'
-      proofData?: ProofSubmission
-    }>({
-      query: ({ challengeId, action, proofData }) => ({
-        url: `/challenges/${challengeId}/status`,
-        method: 'PUT',
-        body: { action, proofData },
-      }),
-      invalidatesTags: (result, error, { challengeId }) => [
-        { type: 'Challenge', id: challengeId }
-      ],
-    }),
-
-    // 4. Toggle favorite (used in ChallengeModal, ChallengeCard)
-    toggleFavorite: builder.mutation<{ isFavorite: boolean }, string>({
+    // Save challenge to favorites
+    saveChallenge: builder.mutation<void, string>({
       query: (challengeId) => ({
-        url: `/challenges/${challengeId}/favorite`,
-        method: 'POST',
+        url: `/challenges/${challengeId}/save`,
+        method: 'PATCH'
       }),
-      invalidatesTags: (result, error, challengeId) => [
-        { type: 'Challenge', id: challengeId }
-      ],
+      transformErrorResponse: (error) => {
+        handleError(error)
+        return error
+      },
+      async onQueryStarted(challengeId, { dispatch, queryFulfilled }) {
+        // Update localStorage immediately
+        addFavoriteToStorage(challengeId);
+
+        // Get the current challenges list
+        const savedChallenges = dispatch(
+          challengesApi.util.updateQueryData('getChallenges', { userConnectionType: 'saved' }, (draft) => {
+            if (!draft.find(c => c.id === challengeId)) {
+              // Add the challenge to saved list if not already there
+              const challenge = draft.find(c => c.id === challengeId)
+              if (challenge) {
+                draft.push(challenge)
+              }
+            }
+          })
+        )
+
+        try {
+          await queryFulfilled
+        } catch {
+          // If the mutation fails, revert the optimistic update
+          savedChallenges.undo()
+          // Also revert localStorage
+          removeFavoriteFromStorage(challengeId);
+        }
+      }
     }),
 
-    // 5. Get favorite status (used in ChallengeModal)
-    getFavoriteStatus: builder.query<{ isFavorite: boolean }, string>({
-      query: (challengeId) => `/challenges/${challengeId}/favorite-status`,
-      providesTags: (result, error, challengeId) => [
-        { type: 'Challenge', id: challengeId }
-      ],
+    // Remove challenge from favorites
+    unsaveChallenge: builder.mutation<void, string>({
+      query: (challengeId) => ({
+        url: `/challenges/${challengeId}/unsave`,
+        method: 'PATCH'
+      }),
+      transformErrorResponse: (error) => {
+        handleError(error)
+        return error
+      },
+      async onQueryStarted(challengeId, { dispatch, queryFulfilled }) {
+        // Update localStorage immediately
+        removeFavoriteFromStorage(challengeId);
+
+        // Get the current challenges list
+        const savedChallenges = dispatch(
+          challengesApi.util.updateQueryData('getChallenges', { userConnectionType: 'saved' }, (draft) => {
+            const index = draft.findIndex(c => c.id === challengeId)
+            if (index !== -1) {
+              draft.splice(index, 1)
+            }
+          })
+        )
+
+        try {
+          await queryFulfilled
+        } catch {
+          // If the mutation fails, revert the optimistic update
+          savedChallenges.undo()
+          // Also revert localStorage
+          addFavoriteToStorage(challengeId);
+        }
+      }
     }),
 
-    // 6. Get favorites (probably used somewhere)
-    getFavorites: builder.query<Challenge[], void>({
-      query: () => '/challenges/favorites',
-      providesTags: ['Challenge'],
-    }),
-  }),
+    // Get favorite status
+    getFavoriteStatus: builder.query<boolean, string>({
+      queryFn: async (challengeId, { getState }) => {
+        try {
+          // First check localStorage
+          const isInLocalStorage = isFavoriteInStorage(challengeId);
+          if (isInLocalStorage) {
+            return { data: true };
+          }
+
+          // If not in localStorage, check the API state
+          const state = getState() as any;
+          const savedChallenges = state.api?.queries?.['getChallenges({"userConnectionType":"saved"}']?.data;
+          if (savedChallenges) {
+            const isSaved = savedChallenges.some((c: Challenge) => c.id === challengeId);
+            // Update localStorage if found in API state
+            if (isSaved) {
+              addFavoriteToStorage(challengeId);
+            }
+            return { data: isSaved };
+          }
+          return { data: false };
+        } catch (error) {
+          return { error: { status: 'CUSTOM_ERROR', error: 'Failed to get favorite status' } };
+        }
+      },
+      providesTags: (result, error, challengeId) => [{ type: 'Challenge', id: challengeId }]
+    })
+  })
 })
 
 export const {
+  useGetChallengesQuery,
+  useGetChallengeQuery,
   useCreateChallengeMutation,
-  useGetChallengeStatusQuery,
-  useUpdateChallengeStatusMutation,
-  useToggleFavoriteMutation,
-  useGetFavoriteStatusQuery,
-  useGetFavoritesQuery,
+  useSaveChallengeMutation,
+  useUnsaveChallengeMutation,
+  useGetFavoriteStatusQuery
 } = challengesApi 

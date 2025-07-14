@@ -26,4 +26,6 @@ public class UserStatsService {
         statsRepo.save(stats);
         log.info("Incremented createdChallengesCount");
     }
+
+    // TODO increment saved chalenges
 }

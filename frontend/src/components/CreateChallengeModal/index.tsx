@@ -24,9 +24,9 @@ import FitnessCenterIcon from '@mui/icons-material/FitnessCenter'
 import PaletteIcon from '@mui/icons-material/Palette'
 import GroupIcon from '@mui/icons-material/Group'
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz'
-import { challengesApi } from '@/lib/api/challenges'
-import { imagesApi } from '@/lib/api/images'
+import { useCreateChallengeMutation } from '@/lib/store/api/challengesApi'
 import { mockCategories } from '@/lib/mock/data'
+import { CreateChallengeRequest } from '@/lib/types/api.types'
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -164,9 +164,11 @@ export default function CreateChallengeModal({
   const [points, setPoints] = useState<number>(100)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
   const router = useRouter()
+
+  // Use RTK Query mutation
+  const [createChallenge, { isLoading, error }] = useCreateChallengeMutation()
 
   const pointsRange = getPointsRange(difficulty)
 
@@ -212,31 +214,23 @@ export default function CreateChallengeModal({
     }
 
     try {
-      setIsLoading(true)
-
-      // Upload image
-      let imageUrl = '/images/challenges/default.jpg'
-      if (selectedFile) {
-        imageUrl = await imagesApi.upload(selectedFile)
-      }
-
-              // Create challenge
-      const challenge = await challengesApi.create({
+      const challengeData: CreateChallengeRequest = {
         title,
         description,
-        category,
-        difficulty,
-        imageUrl,
-        points
-      }, user.id)
+        category: category.toLowerCase(), // Convert to lowercase to match backend enum
+        difficulty: difficulty.toLowerCase(), // Convert difficulty to lowercase as well for consistency
+        points,
+        coverImageUrl: previewUrl || null
+      }
 
-      router.refresh() // Обновляем список заданий на главной странице
-      
+      // Create challenge using RTK Query mutation
+      await createChallenge(challengeData).unwrap()
+
+      router.refresh() // Refresh the challenges list
       handleClose()
-    } catch (error) {
-      console.error('Error creating challenge:', error)
-    } finally {
-      setIsLoading(false)
+    } catch (err) {
+      console.error('Error creating challenge:', err)
+      // The error is already handled by RTK Query's error handling
     }
   }
 

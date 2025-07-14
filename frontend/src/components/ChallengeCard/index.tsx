@@ -24,10 +24,11 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PlayArrowIcon from '@mui/icons-material/PlayArrow'
 import PersonIcon from '@mui/icons-material/Person'
 import ChallengeModal from '../ChallengeModal'
+import FavoriteButton from '../FavoriteButton'
 import { mockChallengeLikes, mockCompletions, mockUsers } from '@/lib/mock/data'
 import { useAuth } from '@/lib/providers/AuthProvider'
-import { challengesApi } from '@/lib/api/challenges'
 import { getDifficultyColor } from '@/lib/utils'
+import { Challenge } from '@/lib/types/api.types'
 
 export interface ChallengeCardProps {
   challenge: {
@@ -134,67 +135,14 @@ export function ChallengeCardSkeleton() {
 }
 
 export default function ChallengeCard({ challenge, disableInteractions = false }: ChallengeCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [likesCount, setLikesCount] = useState(0)
-  const [completionsCount, setCompletionsCount] = useState(0)
   const [modalOpen, setModalOpen] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
   const { user } = useAuth()
-
-  // Update likes, favorites state and completion count
-  const updateCounts = () => {
-    const likes = mockChallengeLikes[challenge.id] || [];
-    const userLiked = user ? likes.includes(user.id) : false;
-    setIsLiked(userLiked);
-    setLikesCount(likes.length);
-
-    const completions = mockCompletions[challenge.id] || [];
-    setCompletionsCount(completions.length);
-
-    // Check if challenge is bookmarked
-    const userBookmarked = user ? user.favoritesChallenges.includes(challenge.id) : false;
-    setIsBookmarked(userBookmarked);
-  }
-
-  useEffect(() => {
-    updateCounts();
-  }, [challenge.id, modalOpen]); // Update when modal opens/closes
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation()
-    
-    if (!user || disableInteractions) return;
-    
-    // Reduce delay to 100-200ms
-    setTimeout(() => {
-      const likes = mockChallengeLikes[challenge.id] || [];
-      if (!isLiked) {
-        mockChallengeLikes[challenge.id] = [...likes, user.id];
-      } else {
-        mockChallengeLikes[challenge.id] = likes.filter(id => id !== user.id);
-      }
-      updateCounts(); // Update state immediately after change
-    }, Math.random() * 100 + 100);
+    if (!user || disableInteractions) return
+    // TODO: Implement when like endpoint is ready
   }
-
-  const handleBookmark = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    if (!user || disableInteractions) return;
-    
-    try {
-      const response = await challengesApi.toggleFavorite(challenge.id);
-      if (!response.error) {
-        updateCounts();
-      } else {
-        console.error('Failed to toggle bookmark:', response.error);
-      }
-    } catch (error) {
-      console.error('Failed to toggle bookmark:', error);
-    }
-  }
-
-
 
   return (
     <>
@@ -371,11 +319,7 @@ export default function ChallengeCard({ challenge, disableInteractions = false }
                     }
                   }}
                 >
-                  {isLiked ? (
-                    <FavoriteIcon sx={{ fontSize: 20, color: disableInteractions ? '#9CA3AF' : '#F87171' }} />
-                  ) : (
-                    <FavoriteBorderIcon sx={{ fontSize: 20 }} />
-                  )}
+                  <FavoriteBorderIcon sx={{ fontSize: 20 }} />
                 </IconButton>
                 <Typography
                   variant="body2"
@@ -384,32 +328,15 @@ export default function ChallengeCard({ challenge, disableInteractions = false }
                     fontSize: '14px'
                   }}
                 >
-                  {likesCount}
+                  0
                 </Typography>
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <IconButton
-                  onClick={handleBookmark}
-                  size="small"
-                  disabled={disableInteractions}
-                  sx={{ 
-                    p: 0,
-                    color: '#9CA3AF',
-                    '&:hover': !disableInteractions ? {
-                      color: '#FFD700'
-                    } : {},
-                    '&.Mui-disabled': {
-                      color: '#9CA3AF'
-                    }
-                  }}
-                >
-                  {isBookmarked ? (
-                    <BookmarkIcon sx={{ fontSize: 20, color: disableInteractions ? '#9CA3AF' : '#FFD700' }} />
-                  ) : (
-                    <BookmarkBorderIcon sx={{ fontSize: 20 }} />
-                  )}
-                </IconButton>
+                <FavoriteButton 
+                  challengeId={challenge.id}
+                  disabled={!user || disableInteractions}
+                />
               </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -421,15 +348,15 @@ export default function ChallengeCard({ challenge, disableInteractions = false }
                     fontSize: '14px'
                   }}
                 >
-                  {completionsCount}
+                  {challenge.completionsCount || 0}
                 </Typography>
               </Box>
             </Stack>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Avatar
-                src={challenge.creator.avatarUrl}
-                alt={challenge.creator.username}
+                src={challenge.creator?.avatarUrl || '/images/avatars/default.svg'}
+                alt={challenge.creator?.username || 'Unknown User'}
                 sx={{ width: 24, height: 24 }}
               />
               <Typography sx={{ fontSize: '13px', color: '#6B7280' }}>
@@ -440,13 +367,11 @@ export default function ChallengeCard({ challenge, disableInteractions = false }
         </CardContent>
       </Card>
 
-      {!disableInteractions && (
-        <ChallengeModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          challenge={challenge}
-        />
-      )}
+      <ChallengeModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        challenge={challenge}
+      />
     </>
   )
 } 

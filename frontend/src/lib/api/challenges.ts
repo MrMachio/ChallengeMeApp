@@ -1,5 +1,22 @@
-// Temporary mock challenges API - will be replaced with real backend integration
-import { mockChallenges } from '../mock/data'
+// Real backend integration for challenges API
+import axios from 'axios';
+
+// Configure axios
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
+// Add request interceptor for auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
 
 // Define types for challenge creation
 export interface CreateChallengeData {
@@ -11,76 +28,56 @@ export interface CreateChallengeData {
   imageUrl?: string
 }
 
-// Simulate API delay
-const simulateDelay = () => new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500))
-
-// Get current user stub - will be replaced with real auth
-const getCurrentUser = () => {
-  // TODO: Get current user from useAuth context
-  return null;
-};
-
-// Challenge API
+// Challenge API with real backend integration
 export const challengesApi = {
-  create: async (data: CreateChallengeData, userId: string) => {
-    await simulateDelay();
-    
-    // TODO: Replace with real API call
-    const newChallenge = {
-      id: `challenge-${Date.now()}`,
+  create: async (data: CreateChallengeData) => {
+    const response = await api.post('/challenges', {
       ...data,
-      imageUrl: data.imageUrl || '/images/challenges/default.jpg',
-      creatorId: userId,
-      createdAt: new Date().toISOString(),
-      likesCount: 0,
-      completionsCount: 0,
-      timeLimit: 168, // 7 days in hours by default
-      creator: {
-        username: 'Unknown User', // Will be set by backend
-        avatarUrl: '/images/avatars/default.svg'
-      }
-    };
-
-    // In real implementation, this will be saved to backend
-    mockChallenges.push(newChallenge);
-    
-    return newChallenge;
+      difficulty: data.difficulty.toLowerCase()
+    });
+    return response.data;
   },
 
-  getAll: async () => {
-    await simulateDelay();
-    return mockChallenges;
+  getAll: async (filters?: {
+    userConnectionType?: string,
+    difficulty?: string,
+    category?: string,
+    sortType?: string
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.userConnectionType) params.append('userConnectionType', filters.userConnectionType);
+    if (filters?.difficulty) params.append('difficulty', filters.difficulty.toLowerCase());
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.sortType) params.append('sortType', filters.sortType);
+
+    const response = await api.get('/challenges', { params });
+    return response.data;
   },
 
   getById: async (id: string) => {
-    await simulateDelay();
-    return mockChallenges.find(challenge => challenge.id === id);
+    const response = await api.get(`/challenges/${id}`);
+    return response.data;
   },
 
-  // Accept challenge
+  // These endpoints are not yet implemented in backend, keeping stubs for now
   accept: async (challengeId: string, userId: string) => {
-    await simulateDelay();
-    // TODO: Replace with real API call to backend
+    // TODO: Implement when backend endpoint is ready
     return { success: true, message: 'Challenge accepted' };
   },
 
-  // Submit proof for challenge
   submitProof: async (challengeId: string, userId: string, proofData: {
     proofUrl: string;
     description: string;
     proofType: 'image' | 'video';
   }) => {
-    await simulateDelay();
-    // TODO: Replace with real API call to backend
+    // TODO: Implement when backend endpoint is ready
     return { success: true, message: 'Proof submitted successfully' };
   },
 
-  // Get challenge status for user
   getStatus: async (challengeId: string, userId: string) => {
-    await simulateDelay();
-    // TODO: Replace with real API call to backend
+    // TODO: Implement when backend endpoint is ready
     return {
-      status: 'none', // 'none' | 'active' | 'pending' | 'completed'
+      status: 'none',
       proofUrl: null,
       proofDescription: null,
       submittedAt: null,
@@ -88,17 +85,13 @@ export const challengesApi = {
     };
   },
 
-  // Get favorite status for challenge
   getFavoriteStatus: async (challengeId: string) => {
-    await simulateDelay();
-    // TODO: Replace with real API call to backend
+    // TODO: Implement when backend endpoint is ready
     return { data: { isFavorite: false }, error: undefined };
   },
 
-  // Toggle favorite status
   toggleFavorite: async (challengeId: string) => {
-    await simulateDelay();
-    // TODO: Replace with real API call to backend
+    // TODO: Implement when backend endpoint is ready
     return { data: { isFavorite: true }, error: undefined };
   }
 }; 

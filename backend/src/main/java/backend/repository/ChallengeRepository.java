@@ -6,11 +6,12 @@ import backend.model.enums.ChallengeDifficulty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 import java.util.UUID;
 
-public interface ChallengeRepository extends JpaRepository<ChallengeEntity, UUID> {
+public interface ChallengeRepository extends JpaRepository<ChallengeEntity, UUID>, JpaSpecificationExecutor<ChallengeEntity> {
     List<ChallengeEntity> findByCategoryAndDifficultyOrderByLikesCountDesc(
             ChallengeCategory category,
             ChallengeDifficulty difficulty);

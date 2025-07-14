@@ -27,13 +27,15 @@ import { formatDistanceToNow } from 'date-fns'
 import CompletedUsersList from '../CompletedUsersList'
 import { mockCompletions, mockChallengeLikes, mockUsers, recalculateRating } from '@/lib/mock/data'
 import { useChallengeStatus } from '@/lib/hooks/useChallengeStatus'
-import { useAuth } from '@/lib/hooks/useAuth'
-import { challengesApi } from '@/lib/api/challenges'
+import { useAuth } from '@/lib/providers/AuthProvider'
 import { getDifficultyColor, formatTimeAgo } from '@/lib/utils'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import SendIcon from '@mui/icons-material/Send'
 import ReplyIcon from '@mui/icons-material/Reply'
+import { Challenge } from '@/lib/types/api.types'
+import { useGetFavoriteStatusQuery, useSaveChallengeMutation, useUnsaveChallengeMutation } from '@/lib/store/api/challengesApi'
+import FavoriteButton from '../FavoriteButton'
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
@@ -116,23 +118,7 @@ interface Comment {
 interface ChallengeModalProps {
   open: boolean
   onClose: () => void
-  challenge: {
-    id: string
-    title: string
-    description: string
-    category: string
-    difficulty: string
-    points: number
-    imageUrl: string | null
-    creatorId: string
-    creator: {
-      username: string
-      avatarUrl: string | null
-    }
-    createdAt: string
-    likesCount: number
-    completionsCount: number
-  }
+  challenge: Challenge
 }
 
 export default function ChallengeModal({ open, onClose, challenge }: ChallengeModalProps) {
@@ -181,19 +167,21 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   }
   // Use new hook for challenge status management
   const { status: challengeStatus, loading: statusLoading, updateStatus } = useChallengeStatus(challenge.id)
-  // Get current user
-  const { user: currentUser } = useAuth()
+  const { user } = useAuth()
   
   const [isLiked, setIsLiked] = useState(false)
   const [likesCount, setLikesCount] = useState(0)
-  const [isBookmarked, setIsBookmarked] = useState(false)
-  const [bookmarkLoading, setBookmarkLoading] = useState(false)
   const [showProofUpload, setShowProofUpload] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [proofDescription, setProofDescription] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   
+  // Get favorite status from API
+  const { data: isFavorite } = useGetFavoriteStatusQuery(challenge.id)
+  const [saveChallenge, { isLoading: isSaving }] = useSaveChallengeMutation()
+  const [unsaveChallenge, { isLoading: isUnsaving }] = useUnsaveChallengeMutation()
+
   // Comments state
   const [comments, setComments] = useState<Comment[]>(() => generateInitialComments(challenge.id))
   const [newComment, setNewComment] = useState('')
@@ -203,10 +191,10 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   // Get completions for this challenge
   const completedUsers = mockCompletions[challenge.id] || [];
 
-  // Обновляем состояние лайков
+  // Update likes state
   const updateLikes = () => {
     const likes = mockChallengeLikes[challenge.id] || [];
-    const userLiked = currentUser ? likes.includes(currentUser.id) : false;
+    const userLiked = user ? likes.includes(user.id) : false;
     setIsLiked(userLiked);
     setLikesCount(likes.length);
   }
@@ -214,8 +202,6 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   useEffect(() => {
     if (open) {
       updateLikes();
-      // Загружаем статус избранного
-      loadBookmarkStatus();
       setShowProofUpload(false);
       setSelectedFile(null);
       setPreviewUrl(null);
@@ -223,56 +209,30 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
     }
   }, [open, challenge.id, challenge.likesCount]);
 
-  // Additional effect to update likes and bookmarks when challenge data changes
-  useEffect(() => {
-    if (open) {
-      updateLikes();
-      loadBookmarkStatus();
-    }
-  }, [challenge.likesCount, currentUser?.favoritesChallenges]);
-
-  const loadBookmarkStatus = async () => {
-    if (!currentUser) return;
-    
-    try {
-      const response = await challengesApi.getFavoriteStatus(challenge.id);
-      if (!response.error) {
-        setIsBookmarked(response.data.isFavorite);
-      }
-    } catch (error) {
-      console.error('Failed to load bookmark status:', error);
-    }
-  };
-
   const handleBookmark = async () => {
-    if (!currentUser || bookmarkLoading) return;
-    
-    setBookmarkLoading(true);
+    if (!user) return
     
     try {
-      const response = await challengesApi.toggleFavorite(challenge.id);
-      if (!response.error) {
-        setIsBookmarked(response.data.isFavorite);
+      if (isFavorite) {
+        await unsaveChallenge(challenge.id).unwrap()
       } else {
-        console.error('Failed to toggle bookmark:', response.error);
+        await saveChallenge(challenge.id).unwrap()
       }
     } catch (error) {
-      console.error('Failed to toggle bookmark:', error);
-    } finally {
-      setBookmarkLoading(false);
+      console.error('Failed to toggle bookmark:', error)
     }
-  };
+  }
 
   const handleLike = () => {
-    if (!currentUser) return;
+    if (!user) return;
     
     // Reduce delay to 100-200ms
     setTimeout(() => {
       const likes = mockChallengeLikes[challenge.id] || [];
       if (!isLiked) {
-        mockChallengeLikes[challenge.id] = [...likes, currentUser.id];
+        mockChallengeLikes[challenge.id] = [...likes, user.id];
       } else {
-        mockChallengeLikes[challenge.id] = likes.filter(id => id !== currentUser.id);
+        mockChallengeLikes[challenge.id] = likes.filter(id => id !== user.id);
       }
               updateLikes(); // Update state immediately after change
     }, Math.random() * 100 + 100);
@@ -356,13 +316,13 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
 
   // Comments handlers
   const handleAddComment = () => {
-    if (!newComment.trim() || !currentUser) return;
+    if (!newComment.trim() || !user) return;
     
     const comment: Comment = {
       id: Date.now().toString(),
-      userId: currentUser.id,
-      username: currentUser.username,
-      avatarUrl: currentUser.avatarUrl || '/images/avatars/default.svg',
+      userId: user.id,
+      username: user.username,
+      avatarUrl: user.avatarUrl || '/images/avatars/default.svg',
       content: newComment,
       createdAt: new Date().toISOString(),
       replies: []
@@ -373,13 +333,13 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   };
 
   const handleAddReply = (commentId: string) => {
-    if (!replyText.trim() || !currentUser) return;
+    if (!replyText.trim() || !user) return;
     
     const reply: Comment = {
       id: `${commentId}-${Date.now()}`,
-      userId: currentUser.id,
-      username: currentUser.username,
-      avatarUrl: currentUser.avatarUrl || '/images/avatars/default.svg',
+      userId: user.id,
+      username: user.username,
+      avatarUrl: user.avatarUrl || '/images/avatars/default.svg',
       content: replyText,
       createdAt: new Date().toISOString(),
       replies: []
@@ -405,7 +365,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       // Temporarily removed mockUsers usage
       
       // Update localStorage if it's current user
-      if (currentUser && completion.userId === currentUser.id) {
+      if (user && completion.userId === user.id) {
         try {
           await updateStatus('approve')
         } catch (error) {
@@ -424,7 +384,7 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
       // Temporarily removed mockUsers usage
       
       // Update localStorage if it's current user
-      if (currentUser && completion.userId === currentUser.id) {
+      if (user && completion.userId === user.id) {
         try {
           // Update local storage to reflect the cancelled state
           const userData = JSON.parse(localStorage.getItem('userData') || '{}')
@@ -442,17 +402,17 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
   }
 
   const handleRateCompletion = (completionId: string, rating: number) => {
-    if (!currentUser) return;
+    if (!user) return;
     
     const completion = mockCompletions[challenge.id]?.find(c => c.id === completionId)
     if (completion && completion.status === 'approved') {
       // Prevent user from rating their own completion
-      if (completion.userId === currentUser.id) {
+      if (completion.userId === user.id) {
         return
       }
       
       // Add or update the user's rating
-      completion.userRatings[currentUser.id] = rating
+      completion.userRatings[user.id] = rating
       
       // Calculate new average rating using helper function
       completion.rating = recalculateRating(completion.userRatings)
@@ -586,12 +546,15 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
               </Typography>
               <IconButton 
                 onClick={handleBookmark}
-                disabled={bookmarkLoading}
+                disabled={!user || isSaving || isUnsaving}
                 sx={{
-                  '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.04)' }
+                  color: isFavorite ? '#FFD700' : 'white',
+                  '&:hover': {
+                    color: isFavorite ? '#FFD700' : 'white'
+                  }
                 }}
               >
-                {isBookmarked ? <BookmarkIcon sx={{ color: '#FFD700' }} /> : <BookmarkBorderIcon />}
+                {isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
               </IconButton>
             </Stack>
           </Box>
@@ -600,14 +563,14 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
-              src={challenge.creator.avatarUrl || '/images/avatars/default.svg'}
-              alt={challenge.creator.username}
+              src={challenge.creator?.avatarUrl || '/images/avatars/default.svg'}
+              alt={challenge.creator?.username || 'Unknown User'}
             />
             <Box>
-              <Typography variant="subtitle2">
-                {currentUser?.id === challenge.creatorId ? 'you' : challenge.creator.username}
+              <Typography variant="subtitle1" fontWeight={500}>
+                {challenge.creator?.username || 'Unknown User'}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="body2" color="text.secondary">
                 {formatDistanceToNow(new Date(challenge.createdAt), { addSuffix: true })}
               </Typography>
             </Box>
@@ -869,12 +832,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
           </Typography>
           
           {/* Добавить новый комментарий */}
-          {currentUser && (
+          {user && (
             <Box sx={{ mb: 3 }}>
               <Stack direction="row" spacing={2} alignItems="flex-start">
                 <Avatar
-                  src={currentUser.avatarUrl || '/images/avatars/default.svg'}
-                  alt={currentUser.username}
+                  src={user.avatarUrl || '/images/avatars/default.svg'}
+                  alt={user.username}
                   sx={{ width: 40, height: 40 }}
                 />
                 <Box sx={{ flex: 1 }}>
@@ -978,12 +941,12 @@ export default function ChallengeModal({ open, onClose, challenge }: ChallengeMo
                     </Box>
 
                     {/* Форма ответа */}
-                    {replyingTo === comment.id && currentUser && (
+                    {replyingTo === comment.id && user && (
                       <Box sx={{ mt: 2 }}>
                         <Stack direction="row" spacing={2} alignItems="flex-start">
                           <Avatar
-                            src={currentUser.avatarUrl || '/images/avatars/default.svg'}
-                            alt={currentUser.username}
+                            src={user.avatarUrl || '/images/avatars/default.svg'}
+                            alt={user.username}
                             sx={{ width: 32, height: 32 }}
                           />
                           <Box sx={{ flex: 1 }}>

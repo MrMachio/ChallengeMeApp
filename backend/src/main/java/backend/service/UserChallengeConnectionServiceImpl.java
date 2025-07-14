@@ -18,7 +18,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserChallengeConnectionServiceImpl implements UserChallengeConnectionService{
     private final UserChallengeConnectionRepository connRepo;
-    private final UserService userService;
 
     @Override
     public List<ChallengeSummaryDTO> getChallengesForUserByConnectionType(UUID userId, ConnectionType connType) {
@@ -34,8 +33,8 @@ public class UserChallengeConnectionServiceImpl implements UserChallengeConnecti
                 .timestamp(OffsetDateTime.now())
                 .build();
         UserChallengeConnectionEntity saved = connRepo.save(entity);
-        log.info("Successfully established connection of type [{}] between user and challenge at ts -> {}"
-                , connType.toString(), saved.getTimestamp().toString());
+        log.info("Successfully established connection of type [{}] between user and challenge at ts -> {}",
+                connType.toString(), saved.getTimestamp().toString());
         return saved;
     }
 
@@ -48,6 +47,8 @@ public class UserChallengeConnectionServiceImpl implements UserChallengeConnecti
 
     @Override
     public void deleteUserChallengeConnection(UUID userId, UUID challengeId, ConnectionType connType) {
-
+        int deleted_rows = connRepo.deleteByUserIdAndChallengeIdAndConnectionType(userId, challengeId, connType);
+        log.info("Deleted {} user-challenge connection(s) for userId={}, challengeId={}, connectionType={}",
+                deleted_rows, userId, challengeId, connType);
     }
 }

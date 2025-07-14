@@ -1,7 +1,7 @@
 package backend.dto;
 
-enum SortType {
-    SUBMISSIONS,
-    LIKES,
-    POINTS
+public enum SortType {
+    submissions,
+    likes,
+    points
 }

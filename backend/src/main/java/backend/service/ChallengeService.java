@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface ChallengeService {
     ChallengeEntity getChallengeById(UUID challengeId);
 
-    List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query);
+    List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query, UUID userId);
 
     ChallengeDetailsDTO createChallenge(CreateChallengeRequestDTO req, UUID userId);
 
@@ -20,6 +20,8 @@ public interface ChallengeService {
 
     void likeChallenge(UUID challengeId);
     void saveChallenge(UUID challengeId, UUID userId);
+    void unsaveChallenge(UUID challengeId, UUID userId);
+
     void acceptChallenge(UUID challengeId, UUID userId);
 
     // Called by submissionService on pending submission
