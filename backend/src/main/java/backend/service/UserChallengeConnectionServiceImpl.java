@@ -18,7 +18,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserChallengeConnectionServiceImpl implements UserChallengeConnectionService{
     private final UserChallengeConnectionRepository connRepo;
-    private final UserService userService;
 
     @Override
     public List<ChallengeSummaryDTO> getChallengesForUserByConnectionType(UUID userId, ConnectionType connType) {

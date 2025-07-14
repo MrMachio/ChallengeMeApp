@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface ChallengeService {
     ChallengeEntity getChallengeById(UUID challengeId);
 
-    List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query);
+    List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query, UUID userId);
 
     ChallengeDetailsDTO createChallenge(CreateChallengeRequestDTO req, UUID userId);
 
