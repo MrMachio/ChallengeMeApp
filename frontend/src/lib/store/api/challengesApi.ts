@@ -3,8 +3,6 @@ import { FetchBaseQueryError } from '@reduxjs/toolkit/query/react'
 import type { Challenge, CreateChallengeRequest } from '@/lib/types/api.types'
 import { addFavoriteToStorage, removeFavoriteFromStorage, isFavoriteInStorage } from '@/lib/utils/favorites'
 
-export type { Challenge, CreateChallengeRequest }
-
 export interface ChallengeFilters {
   userConnectionType?: string
   difficulty?: string
