@@ -2,6 +2,7 @@ package backend.mapper;
 
 import backend.dto.request.CreateChallengeRequestDTO;
 import backend.dto.response.ChallengeDetailsDTO;
+import backend.dto.response.ChallengeSummaryDTO;
 import backend.model.ChallengeEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,4 +20,6 @@ public interface ChallengeMapper {
     ChallengeEntity toEntity(CreateChallengeRequestDTO request);
 
     ChallengeDetailsDTO toDetailsDTO(ChallengeEntity entity, UUID authorId, String authorUsername, String authorAvatarUrl);
+
+    ChallengeSummaryDTO toSummaryDTO(ChallengeEntity entity, String authorUsername, String authorAvatarUrl);
 }

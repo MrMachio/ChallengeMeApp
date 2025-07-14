@@ -11,6 +11,8 @@ import backend.model.enums.ConnectionType;
 import backend.repository.ChallengeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -32,9 +34,38 @@ public class ChallengeServiceImpl implements ChallengeService{
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found " + challengeId));
     }
 
+    public ChallengeSummaryDTO toChallengeSummaryDTO(ChallengeEntity entity) {
+        UserEntity author = connService.getAuthorForChallenge(entity.getId());
+        String authorUsername = author.getUsername();
+        String authorAvatarUrl = author.getAvatarUrl();
+
+        return challengeMapper.toSummaryDTO(entity, authorUsername, authorAvatarUrl);
+    }
+
     @Override
-    public List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query) {
-        return List.of();
+    public List<ChallengeSummaryDTO> listChallenges(ChallengeQueryDTO query, UUID userId) {
+        Specification<ChallengeEntity> spec = (root, q, cb) -> cb.conjunction();
+
+        if (query.category() != null) {
+            spec = spec.and((root, cq, cb) -> cb.equal(root.get("category"), query.category()));
+        }
+        if (query.difficulty() != null) {
+            spec = spec.and((root, cq, cb) -> cb.equal(root.get("difficulty"), query.difficulty()));
+        }
+
+        Sort sort = Sort.unsorted();
+        if (query.sortType() != null) {
+            switch (query.sortType()) {
+                case likes -> sort = Sort.by(Sort.Direction.DESC, "likes");
+                case submissions -> sort = Sort.by(Sort.Direction.DESC, "submissions");
+                case points -> sort = Sort.by(Sort.Direction.DESC, "points");
+            }
+        }
+
+        return challengeRepo.findAll(spec, sort)
+                .stream()
+                .map(this::toChallengeSummaryDTO)
+                .toList();
     }
 
     @Override

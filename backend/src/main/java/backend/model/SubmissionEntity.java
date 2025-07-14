@@ -30,7 +30,7 @@ public class SubmissionEntity {
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private SubmissionStatus status = SubmissionStatus.PENDING;
+    private SubmissionStatus status = SubmissionStatus.pending;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

@@ -1,5 +1,6 @@
 package backend.controller;
 
+import backend.dto.ChallengeQueryDTO;
 import backend.dto.request.CreateChallengeRequestDTO;
 import backend.dto.response.ChallengeDetailsDTO;
 import backend.dto.response.ChallengeSummaryDTO;
@@ -15,6 +16,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/challenges")
@@ -35,5 +37,17 @@ public class ChallengeController {
         return challengeService.viewChallenge(challengeId);
     }
 
+    @GetMapping
+    public List<ChallengeSummaryDTO> listChallenges(
+            @RequestParam(required = false) String userConnectionType,
+            @RequestParam(required = false) String difficulty,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String sortType,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        ChallengeQueryDTO queryDTO = ChallengeQueryDTO.fromStrings(userConnectionType, difficulty, category, sortType);
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return challengeService.listChallenges(queryDTO, userId);
+    }
 
 }
