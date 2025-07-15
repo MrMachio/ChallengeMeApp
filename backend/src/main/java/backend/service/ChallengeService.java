@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.ChallengeQueryDTO;
 import backend.dto.request.CreateChallengeRequestDTO;
+import backend.dto.request.SubmissionRequestDTO;
 import backend.dto.response.ChallengeDetailsDTO;
 import backend.dto.response.ChallengeSummaryDTO;
 import backend.model.ChallengeEntity;
@@ -23,11 +24,8 @@ public interface ChallengeService {
     void unsaveChallenge(UUID challengeId, UUID userId);
 
     void acceptChallenge(UUID challengeId, UUID userId);
-
-    // Called by submissionService on pending submission
-    void submitCompletion(UUID userId, UUID challengeId);
-    // Called by submissionService on accepted submission
-    void completeChallenge(UUID challengeId, UUID userId);
-
     void challengeUser(UUID challengeId, UUID userId);
+
+    void submitCompletion(UUID userId, UUID challengeId, SubmissionRequestDTO submission);
+    void completeChallenge(UUID challengeId, UUID userId, UUID authorId);
 }

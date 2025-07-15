@@ -2,6 +2,7 @@ package backend.service;
 
 import backend.dto.ChallengeQueryDTO;
 import backend.dto.request.CreateChallengeRequestDTO;
+import backend.dto.request.SubmissionRequestDTO;
 import backend.dto.response.ChallengeDetailsDTO;
 import backend.dto.response.ChallengeSummaryDTO;
 import backend.mapper.ChallengeMapper;
@@ -24,9 +25,8 @@ import java.util.UUID;
 public class ChallengeServiceImpl implements ChallengeService{
     private final ChallengeRepository challengeRepo;
     private final ChallengeMapper challengeMapper;
-    private final UserChallengeConnectionServiceImpl connService;
+    private final UserChallengeConnectionService connService;
     private final UserService userService;
-    private final UserStatsService statsService;
 
     @Override
     public ChallengeEntity getChallengeById(UUID challengeId) {
@@ -80,8 +80,6 @@ public class ChallengeServiceImpl implements ChallengeService{
         String authorUsername = user.getUsername();
         String authorAvatarUrl = user.getAvatarUrl();
 
-        statsService.incrementCreatedChallengesCount(authorId);
-
         return challengeMapper.toDetailsDTO(saved, authorId, authorUsername, authorAvatarUrl);
     }
 
@@ -110,21 +108,27 @@ public class ChallengeServiceImpl implements ChallengeService{
 
     @Override
     public void acceptChallenge(UUID challengeId, UUID userId) {
-
-    }
-
-    @Override
-    public void submitCompletion(UUID userId, UUID challengeId) {
-
-    }
-
-    @Override
-    public void completeChallenge(UUID challengeId, UUID userId) {
-
+        connService.createUserChallengeConnection(userId, challengeId, ConnectionType.active);
+        connService.deleteUserChallengeConnection(userId, challengeId, ConnectionType.awaiting_response);
     }
 
     @Override
     public void challengeUser(UUID challengeId, UUID userId) {
+        connService.createUserChallengeConnection(userId, challengeId, ConnectionType.awaiting_response);
+    }
 
+    @Override
+    public void submitCompletion(UUID userId, UUID challengeId, SubmissionRequestDTO submission) {
+        // TODO Call submission service to create a submission
+        connService.createUserChallengeConnection(userId, challengeId, ConnectionType.pending_verification);
+        connService.deleteUserChallengeConnection(userId, challengeId, ConnectionType.active);
+    }
+
+    @Override
+    public void completeChallenge(UUID challengeId, UUID userId, UUID authorId) {
+        // TODO check if challenge belongs to author
+        // TODO change submission status to approved
+        connService.createUserChallengeConnection(userId, challengeId, ConnectionType.complete);
+        connService.deleteUserChallengeConnection(userId, challengeId, ConnectionType.pending_verification);
     }
 }
