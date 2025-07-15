@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +23,11 @@ public class UserController {
 //        UserResponseDTO createdUser =  userService.createUser(user);
 //        return ResponseEntity.status(201).body(createdUser);
 //    }
+
+    @GetMapping
+    public List<UserResponseDTO> listUsers() {
+        return userService.listUsers();
+    }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID userId) {
